@@ -7,6 +7,7 @@
 #include "Vertex/Renderer/Renderer.h"
 #include <GLFW/glfw3.h>
 #include "Vertex/CustomFileFormat/FakeFS.h"
+#include "Vertex/Message/messageBus.h"
 
 static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 {
@@ -118,6 +119,7 @@ namespace Vertex
 		//m_Window->SetVSync(false);
 		Time::FPS = GetFPS();
 
+		MessageBus::update();
 		ExecuteMainThreadQueue();
 
 		//VX_CORE_INFO("{0}", timestep.GetMilliseconds());

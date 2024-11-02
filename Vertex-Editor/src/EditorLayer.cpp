@@ -13,6 +13,9 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <VXEntities/Scripting/ScriptEngine.h>
+#include "Vertex/Message/message.h"
+#include "Vertex/Message/messageBus.h"
+#include "VXEntities/Messages/LoadMap.h"
 
 namespace Vertex {
 
@@ -21,6 +24,9 @@ namespace Vertex {
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
 	{
+		Message::subscribe("LOAD_MAP", this);
+		Message* message = new Message("LOAD_MAP", this, new std::string("Map"), MessagePriority::NORMAL);
+		MessageBus::post(message);
 	}
 
 	void EditorLayer::OnAttach()
@@ -233,6 +239,11 @@ namespace Vertex {
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(VX_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		
+	}
+
+	void EditorLayer::onMessage(Message* message)
+	{
 		
 	}
 

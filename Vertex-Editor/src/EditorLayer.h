@@ -26,6 +26,8 @@ namespace Vertex {
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
 
+		virtual void onMessage(Message* message) override;
+
 		void DockSpaceCallback();
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
