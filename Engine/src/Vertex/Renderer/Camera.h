@@ -7,7 +7,7 @@ namespace Vertex
 	class VERTEX_API Camera
 	{
 	public:
-		Camera() = default;
+		Camera() : m_Projection(glm::mat4(1.0f)) {}
 		Camera(const glm::mat4& projection)
 			: m_Projection(projection) {}
 

@@ -6,11 +6,18 @@
 
 namespace Vertex {
 
-	bool Input::IsKeyPressed(KeyCode key)
+	bool Input::IsKeyDown(KeyCode key)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetKey(window, static_cast<int32_t>(key));
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
+	}
+
+	bool Input::IsKeyUp(KeyCode key)
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto state = glfwGetKey(window, static_cast<int32_t>(key));
+		return state == GLFW_RELEASE;
 	}
 
 	bool Input::IsMouseButtonPressed(MouseCode button)

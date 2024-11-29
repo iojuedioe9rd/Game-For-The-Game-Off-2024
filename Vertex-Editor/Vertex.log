@@ -1,19 +1,96 @@
-[20:48:26] [info] VERTEX: Creating window: Vertex Editor (1600, 900, 1.7777778)
-[20:48:27] [info] VERTEX: GLAD STATUS: 1
-[20:48:27] [info] VERTEX: OpenGL Info:
-[20:48:27] [info] VERTEX:   Vendor: NVIDIA Corporation
-[20:48:27] [info] VERTEX:   Renderer: NVIDIA GeForce GTX 1660 SUPER/PCIe/SSE2
-[20:48:27] [info] VERTEX:   Version: 4.6.0 NVIDIA 560.94
-[20:48:27] [info] VERTEX: Loaded PDB Resources/Scripts/Vertex-ScriptCore.pdb
-[20:48:27] [info] VERTEX: Loaded PDB Sandbox/Assets/Scripts/Binaries/Sandbox.pdb
-[20:48:27] [warning] VERTEX: Player has 2 fields:
-[20:48:27] [warning] VERTEX:   Speed (Float)
-[20:48:27] [warning] VERTEX:   Time (Float)
-[20:48:27] [info] VERTEX: Registering Entities
-[20:48:27] [error] VERTEX: 	Could not find ENT type Vertex.ENTPropDynamicSprite
-[20:48:27] [error] VERTEX: 	Could not find ENT type Vertex.ENTPropStaticSprite
-[20:48:27] [error] VERTEX: 	Could not find ENT type Vertex.ENTEnvStaticTilemap
-[20:48:27] [error] VERTEX: 	Could not find ENT type Vertex.ENTEnvScript
-[20:48:27] [error] VERTEX: 	Could not find ENT type Vertex.ENTPointCamera2D
-[20:48:27] [info] VERTEX: ~Registering Entities
-[20:49:27] [info] APP: Map
+[17:13:06] [info] VERTEX: Creating window: Vertex Editor (1600, 900, 1.7777778)
+[17:13:06] [info] VERTEX: GLAD STATUS: 1
+[17:13:06] [info] VERTEX: OpenGL Info:
+[17:13:06] [info] VERTEX:   Vendor: NVIDIA Corporation
+[17:13:06] [info] VERTEX:   Renderer: NVIDIA GeForce GTX 1660 SUPER/PCIe/SSE2
+[17:13:06] [info] VERTEX:   Version: 4.6.0 NVIDIA 560.94
+[17:13:06] [trace] VERTEX: Plugins:
+[17:13:06] [trace] VERTEX: 	plugins\discord-rpc.dll
+[17:13:06] [trace] VERTEX: 	plugins\Test-DLL.dll
+[17:13:13] [info] VERTEX: Loaded PDB Resources/Scripts/Vertex-ScriptCore.pdb
+[17:13:13] [trace] VERTEX: .<Module>
+[17:13:13] [trace] VERTEX: Vertex.CPPEntity
+[17:13:13] [trace] VERTEX: Vertex.ENTBaseBoxCollier2D
+[17:13:13] [trace] VERTEX: Vertex.ENTBaseRigidbody2D
+[17:13:13] [trace] VERTEX: Vertex.Entity
+[17:13:13] [trace] VERTEX: Vertex.Input
+[17:13:13] [trace] VERTEX: Vertex.InternalCalls
+[17:13:13] [trace] VERTEX: Vertex.KeyCode
+[17:13:13] [trace] VERTEX: Vertex.Logger
+[17:13:13] [trace] VERTEX: Vertex.BaseLogger
+[17:13:13] [trace] VERTEX: Vertex.AppLogger
+[17:13:13] [trace] VERTEX: Vertex.CoreLogger
+[17:13:13] [trace] VERTEX: Vertex.Mathf
+[17:13:13] [trace] VERTEX: Vertex.MouseCode
+[17:13:13] [trace] VERTEX: Vertex.Object
+[17:13:13] [trace] VERTEX: Vertex.Renderer2D
+[17:13:13] [trace] VERTEX: Vertex.Texture2D
+[17:13:13] [trace] VERTEX: Vertex.Colour
+[17:13:13] [trace] VERTEX: Vertex.Vector2
+[17:13:13] [trace] VERTEX: Vertex.Vector3
+[17:13:13] [trace] VERTEX: Vertex.Vector4
+[17:13:13] [trace] VERTEX: .BodyType
+[17:13:14] [info] VERTEX: Loaded PDB Sandbox/Assets/Scripts/Binaries/Sandbox.pdb
+[17:13:14] [trace] VERTEX: .<Module>
+[17:13:14] [trace] VERTEX: Sandbox.Enemy
+[17:13:14] [trace] VERTEX: Sandbox.EnemySpawner
+[17:13:14] [trace] VERTEX: Sandbox.HealthSystem
+[17:13:14] [trace] VERTEX: Sandbox.Parallax
+[17:13:14] [trace] VERTEX: Sandbox.Player
+[17:13:14] [warning] VERTEX: Enemy has 2 fields:
+[17:13:14] [warning] VERTEX:   Time (Float)
+[17:13:14] [warning] VERTEX: EnemySpawner has 5 fields:
+[17:13:14] [error] VERTEX: Unknown type: Vertex.Vector2
+[17:13:14] [warning] VERTEX:   BoxSize (<Invalid>)
+[17:13:14] [warning] VERTEX:   speed (Float)
+[17:13:14] [warning] VERTEX:   spawnTimer (Float)
+[17:13:14] [warning] VERTEX:   gameTimer (Float)
+[17:13:14] [error] VERTEX: Unknown type: System.Collections.Generic.List<Sandbox.Enemy>
+[17:13:14] [warning] VERTEX:   enemies (<Invalid>)
+[17:13:14] [warning] VERTEX: Parallax has 8 fields:
+[17:13:14] [error] VERTEX: Unknown type: Sandbox.Player
+[17:13:14] [warning] VERTEX:   player (<Invalid>)
+[17:13:14] [warning] VERTEX:   startPos (Float)
+[17:13:14] [warning] VERTEX: Player has 6 fields:
+[17:13:14] [error] VERTEX: Unknown type: Sandbox.HealthSystem
+[17:13:14] [warning] VERTEX:   healthSystem (<Invalid>)
+[17:13:14] [warning] VERTEX:   LOL (Int)
+[17:13:14] [warning] VERTEX:   Speed (Float)
+[17:13:14] [warning] VERTEX:   JumpTime (Float)
+[17:13:14] [warning] VERTEX:   Time (Float)
+[17:13:14] [info] VERTEX: Registering Entities
+[17:13:14] [error] VERTEX: 	Could not find ENT type Vertex.ENTPropDynamicSprite
+[17:13:14] [error] VERTEX: 	Could not find ENT type Vertex.ENTPropStaticSprite
+[17:13:14] [error] VERTEX: 	Could not find ENT type Vertex.ENTEnvStaticTilemap
+[17:13:14] [error] VERTEX: 	Could not find ENT type Vertex.ENTEnvScript
+[17:13:14] [error] VERTEX: 	Could not find ENT type Vertex.ENTPointCamera2D
+[17:13:14] [error] VERTEX: 	Could not find ENT type Vertex.ENTTriggerChangeLevelCircle
+[17:13:14] [info] VERTEX: ~Registering Entities
+[17:13:51] [info] APP: Map
+[17:13:52] [info] VERTEX: Run 2
+[17:13:52] [info] APP: 1 false
+[17:13:56] [info] VERTEX: (5.381563, 72.26685, 0)
+[17:13:56] [info] VERTEX: Hi
+[17:13:57] [info] VERTEX: (65.60736, -116.4036)
+[17:13:57] [info] VERTEX: (65.60736, -116.4036)
+[17:13:57] [info] VERTEX: (65.60736, -116.4036)
+[17:13:57] [info] VERTEX: (65.60736, -116.4036)
+[17:13:57] [info] VERTEX: (65.60736, -116.4036)
+[17:13:58] [info] VERTEX: (27.94572, 28.4046, 0)
+[17:13:58] [info] VERTEX: Hi
+[17:14:01] [info] VERTEX: (37.34931, 90.73078, 0)
+[17:14:01] [info] VERTEX: Hi
+[17:14:04] [info] VERTEX: (50.80729, 8.102679, 0)
+[17:14:04] [info] VERTEX: Hi
+[17:14:07] [info] VERTEX: (690.2414, -17.08272)
+[17:14:07] [info] VERTEX: (690.2414, -17.08272)
+[17:14:07] [info] VERTEX: (690.2414, -17.08272)
+[17:14:07] [info] VERTEX: (690.2414, -17.08272)
+[17:14:07] [info] VERTEX: (690.2414, -17.08272)
+[17:14:07] [info] VERTEX: (702.6678, -20.68503)
+[17:14:07] [info] VERTEX: (702.6678, -20.68503)
+[17:14:07] [info] VERTEX: (702.6678, -20.68503)
+[17:14:07] [info] VERTEX: (702.6678, -20.68503)
+[17:14:07] [info] VERTEX: (702.6678, -20.68503)
+[17:14:07] [info] VERTEX: (702.6678, -20.68503)
+[17:14:08] [info] VERTEX: Window Resized

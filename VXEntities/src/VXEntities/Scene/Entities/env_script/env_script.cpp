@@ -32,4 +32,9 @@ namespace Vertex
 	{
 		ScriptEngine::OnPhysUpdateEntity(this, ts);
 	}
+
+	void ENTEnvScript::Remove()
+	{
+		ScriptEngine::OnRemoveEntity(this, [&](ENTEnvScript* sc) { return true; });
+	}
 }

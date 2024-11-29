@@ -3,6 +3,7 @@
 #include "Vertex/Core/Application.h"
 #include "Vertex/CommandBuffer/CommandBufferPool.h"
 #include "Renderer2D.h"
+#include <glad/glad.h>
 
 namespace Vertex {
 
@@ -13,6 +14,11 @@ namespace Vertex {
 	{
 		RenderCommand::Init();
 		Renderer2D::Init();
+	}
+
+	void Renderer::De()
+	{
+		glDisable(GL_DEPTH_TEST);
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height)

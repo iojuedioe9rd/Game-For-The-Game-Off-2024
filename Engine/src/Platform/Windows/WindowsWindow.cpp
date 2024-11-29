@@ -165,6 +165,9 @@ namespace Vertex {
 	{
 		VX_PROFILE_FUNCTION();
 		glfwPollEvents();
+		int display_w, display_h;
+		glfwGetFramebufferSize(m_Window, &display_w, &display_h);
+		glViewport(0, 0, display_w, display_h);
 		m_Context->SwapBuffers();
 	}
 

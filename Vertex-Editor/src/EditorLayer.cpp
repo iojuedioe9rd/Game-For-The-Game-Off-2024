@@ -16,8 +16,109 @@
 #include "Vertex/Message/message.h"
 #include "Vertex/Message/messageBus.h"
 #include "VXEntities/Messages/LoadMap.h"
+#include "Vertex/Renderer/VertexArray.h"
+#include "Vertex/Renderer/Buffer.h"
+
+//Discord SDK Stuff.
+#include "DiscordRPC/discord_rpc.h"
+#include "DiscordRPC/discord_register.h"
+
+static bool gInit, gRPC = true;
+
+std::string wstringToString(const std::wstring& wstr) {
+	std::string str(wstr.begin(), wstr.end());
+	return str;
+}
+
+std::wstring LoadResourceString(UINT resourceID) {
+	wchar_t buffer[256];  // Buffer to hold the loaded string
+	if (LoadStringW(GetModuleHandle(NULL), resourceID, buffer, sizeof(buffer) / sizeof(wchar_t))) {
+		return buffer;
+	}
+	return L"";  // Return an empty string if loading fails
+}
+
+void SetupDiscord()
+{
+	if (gRPC)
+	{
+		DiscordEventHandlers handlers;
+		memset(&handlers, 0, sizeof(handlers));
+		std::string myline;
+		Discord_Initialize(wstringToString(LoadResourceString(IDS_STRING106)).c_str(), &handlers, 1, "0");
+	}
+	else
+	{
+		Discord_Shutdown();
+	}
+}
+
+
+static void UpdateDiscord()
+{
+	static int64_t StartTime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+	if (gRPC)
+	{
+		DiscordRichPresence discordPresence;
+		memset(&discordPresence, 0, sizeof(discordPresence));
+		discordPresence.state = "I am the RPC Title.";
+		discordPresence.details = "I am just a simple bio.";
+		discordPresence.startTimestamp = StartTime;
+		discordPresence.endTimestamp = NULL;
+		discordPresence.instance = 1;
+
+		Discord_UpdatePresence(&discordPresence);
+	}
+	else
+	{
+		Discord_ClearPresence();
+	}
+}
+
 
 namespace Vertex {
+
+	float quadVertices[] = {
+		// Positions      // Texture Coords
+	   -1.0f, -1.0f,     0.0f, 0.0f,  // Bottom-left
+		1.0f, -1.0f,     1.0f, 0.0f,  // Bottom-right
+		1.0f,  1.0f,     1.0f, 1.0f,  // Top-right
+	   -1.0f,  1.0f,     0.0f, 1.0f   // Top-left
+	};
+
+	uint32_t quadIndices[] = {
+		0, 1, 2,  // First triangle
+		2, 3, 0   // Second triangle
+	};
+
+	std::shared_ptr<Vertex::VertexArray> Quad;
+
+	std::shared_ptr<Vertex::VertexArray> SetupFullScreenQuad()
+	{
+		auto quadVAO = std::shared_ptr<Vertex::VertexArray>(Vertex::VertexArray::Create());
+
+		// Create Vertex Buffer
+		auto quadVBO = std::shared_ptr<Vertex::VertexBuffer>(Vertex::VertexBuffer::Create(quadVertices, sizeof(quadVertices)));
+
+		// Define the buffer layout
+		Vertex::BufferLayout layout = {
+			{ Vertex::ShaderDataType::Float2, "a_Position" },
+			{ Vertex::ShaderDataType::Float2, "a_TexCoord" }
+		};
+		quadVBO->SetLayout(layout);
+
+		// Add Vertex Buffer to Vertex Array
+		quadVAO->AddVertexBuffer(quadVBO);
+
+		// Create Index Buffer
+		auto quadIBO = std::shared_ptr<Vertex::IndexBuffer>(Vertex::IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32_t)));
+
+		// Set Index Buffer for Vertex Array
+		quadVAO->SetIndexBuffer(quadIBO);
+
+		return quadVAO;
+	}
 
 	extern const std::filesystem::path g_AssetPath;
 
@@ -27,13 +128,21 @@ namespace Vertex {
 		Message::subscribe("LOAD_MAP", this);
 		Message* message = new Message("LOAD_MAP", this, new std::string("Map"), MessagePriority::NORMAL);
 		MessageBus::post(message);
+		SetupDiscord();
+		gInit = false;
 	}
+
+	Ref<Texture2D> CheckerboardTexture;
 
 	void EditorLayer::OnAttach()
 	{
 		VX_PROFILE_FUNCTION();
 
-		m_CheckerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
+		Quad = SetupFullScreenQuad();
+		m_FlatColorShader = Shader::Create("assets/shaders/FlatColor.glsl");
+
+		CheckerboardTexture = Texture2D::Create("assets/textures/Checkerboard.png");
+		this->m_CheckerboardTexture = CheckerboardTexture;
 		m_IconPlay = Texture2D::CreateWin(IDB_PNG4, "PNG");
 		m_IconStop = Texture2D::CreateWin(IDB_PNG5, "PNG");
 
@@ -41,7 +150,12 @@ namespace Vertex {
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1600;
 		fbSpec.Height = 900;
-		m_Framebuffer = Framebuffer::Create(fbSpec);
+
+		FramebufferSpecification fbSpec2;
+		fbSpec2.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
+		fbSpec2.Width = 1600;
+		fbSpec2.Height = 900;
+
 
 		m_CameraController.GetCamera().SetWindowSize(1280, 720);
 		m_CameraController.GetCamera().SetPosition(glm::vec3(0,0,0));
@@ -49,6 +163,7 @@ namespace Vertex {
 
 
 		m_Framebuffer = Framebuffer::Create(fbSpec);
+		m_Framebuffer2 = Framebuffer::Create(fbSpec2);
 
 		m_ActiveScene = VXEntities_MakeOrGetScene("ActiveScene");
 
@@ -91,112 +206,253 @@ namespace Vertex {
 		
 		GImGui = (ImGuiContext*)ImGuiLink::GetContext();
 
+		// Load models
+
+		float vertices[] =
+		{
+			//     COORDINATES     /        COLORS          /    TexCoord   /        NORMALS       //
+			-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 0.0f, 5.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+			0.5f, 0.0f, -0.5f,      0.83f, 0.70f, 0.44f,	 5.0f, 5.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+			0.5f, 0.0f,  0.5f,      0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+
+			-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,      -0.8f, 0.5f,  0.0f, // Left Side
+			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      -0.8f, 0.5f,  0.0f, // Left Side
+			0.0f, 0.8f,  0.0f,      0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,      -0.8f, 0.5f,  0.0f, // Left Side
+
+			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,     5.0f, 0.0f,       0.0f, 0.5f, -0.8f, // Non-facing side
+			0.5f, 0.0f, -0.5f,      0.83f, 0.70f, 0.44f,	 0.0f, 0.0f,       0.0f, 0.5f, -0.8f, // Non-facing side
+			0.0f, 0.8f,  0.0f,      0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,       0.0f, 0.5f, -0.8f, // Non-facing side
+
+			0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	     0.0f, 0.0f,       0.8f, 0.5f,  0.0f, // Right side
+			0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	     5.0f, 0.0f,       0.8f, 0.5f,  0.0f, // Right side
+			0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	     2.5f, 5.0f,       0.8f, 0.5f,  0.0f, // Right side
+
+			0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	     5.0f, 0.0f,       0.0f, 0.5f,  0.8f, // Facing side
+			-0.5f, 0.0f,  0.5f,    0.83f, 0.70f, 0.44f,      0.0f, 0.0f,       0.0f, 0.5f,  0.8f, // Facing side
+			0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	     2.5f, 5.0f,       0.0f, 0.5f,  0.8f  // Facing side
+		};
+
+
+
+		
+
+		Ref<VertexBuffer> VBO = Ref<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
+		VBO->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float3, "a_Colour" },
+			{ ShaderDataType::Float2, "a_TexCoord" },
+			{ ShaderDataType::Float3, "a_Normal" }
+		});
+
+		unsigned int indices[] =
+		{
+			0, 1, 2, // Bottom side
+			0, 2, 3, // Bottom side
+			4, 6, 5, // Left side
+			7, 9, 8, // Non-facing side
+			10, 12, 11, // Right side
+			13, 15, 14 // Facing side
+		};
+
+
+		int indicesSize = sizeof(indices) / sizeof(unsigned int);
+		Ref<IndexBuffer> indexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices, indicesSize));
+
+
+		m_3DShader = Shader::Create("assets/shaders/3DModel.glsl");
+		m_3DVA = Ref<VertexArray>(VertexArray::Create());
+		m_3DVA->AddVertexBuffer(VBO);
+		m_3DVA->SetIndexBuffer(indexBuffer);
+
+
 		OpenScene();
 	}
 
 	float t = 0.0f;
 
+	
+	void DrawFullScreenQuad(Ref<Shader> m_FlatColorShader, Framebuffer* m_Framebuffer2)
+	{
+		// Step 1: Define the vertex data for a full-screen quad
+		float vertices[] = {
+			// Positions         // Texture coordinates
+			-1.0f,  1.0f, 0.0f, 1.0f, 1.0f, // Top left
+			-1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // Bottom left
+			 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // Bottom right
+			 1.0f,  1.0f, 0.0f, 0.0f, 1.0f  // Top right
+		};
+
+		unsigned int indices[] = {
+			0, 1, 2, 0, 2, 3  // Two triangles to make a quad
+		};
+
+		// Step 2: Create the vertex buffer and index buffer
+		Ref<VertexBuffer> vertexBuffer = Ref<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
+		Ref<IndexBuffer> indexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices, 6));
+
+		// Step 3: Create a VertexArray to hold the buffers
+		Ref<VertexArray> vertexArray = Ref<VertexArray>(VertexArray::Create());
+		vertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float2, "a_UV" },
+			});
+		vertexArray->AddVertexBuffer(vertexBuffer);
+		vertexArray->SetIndexBuffer(indexBuffer);
+
+		// Step 4: Upload the texture uniform and bind the shader
+		m_FlatColorShader->UploadUniformInt("u_Texture", 0); // Assuming 'u_Texture' is the uniform name in the shader
+		m_FlatColorShader->UploadUniformFloat2("u_Res", Application::GetWindowSize());
+		m_FlatColorShader->UploadUniformFloat("u_Time", t);
+		m_FlatColorShader->Bind();
+
+		// Bind the framebuffer texture to texture unit 0
+		m_Framebuffer2->BindAsTex(0);
+
+		// Step 5: Bind the vertex array and issue the draw call
+		vertexArray->Bind();
+		RenderCommand::DrawIndexed(vertexArray, indexBuffer->GetCount());
+		vertexArray->Unbind();
+	}
+
+
 	void EditorLayer::OnDetach()
 	{
 		VX_PROFILE_FUNCTION();
 	}
-
+	float rotation = 0.0f;
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
+		UpdateDiscord();
+
 		if (m_EditorScene == nullptr)
 		{
-
+			// Handle initialization or fallback logic
 		}
-		
-		
+
 		t += ts;
-		
-		
 
 		VX_PROFILE_FUNCTION();
 
-		// Update
-		
-
 		// Render
 		Renderer2D::ResetStats();
-		m_Framebuffer->Bind();
+		m_Framebuffer2->Bind();
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
+		m_Framebuffer2->ClearAttachment(1, -1);
 
-		m_Framebuffer->ClearAttachment(1, -1);
-
-		Ref<Camera> camera;
-		glm::mat4 transform;
-		if (true)
+		if (m_SceneState == SceneState::Edit)
 		{
-			switch (m_SceneState)
-			{
-				case SceneState::Edit:
-				{
-					if (m_ViewportFocused)
-						m_CameraController.OnUpdate(ts);
-					m_EditorCamera.OnUpdate(ts);
+			if (m_ViewportFocused)
+				m_CameraController.OnUpdate(ts);
+			m_EditorCamera.OnUpdate(ts);
 
-					Renderer2D::BeginScene(m_EditorCamera.GetViewProjection());
-					m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-					Renderer2D::EndScene();
-
-					break;
-				}
-				case SceneState::Play:
-				{
-					Ref<Camera> cam;
-					glm::mat4 p_cam;
-					if (m_ActiveScene->GetACameraInScene(&cam, true, &p_cam))
-					{
-						Renderer2D::BeginScene(cam->GetProjection(), p_cam);
-						m_ActiveScene->OnUpdateRuntime(ts);
-						Renderer2D::EndScene();
-					}
-					
-					break;
-				}
-			}
-			//VX_INFO("{0}", sinf(t));
-
-			auto mx = ImGuiLink::GetMousePos().x;
-			auto my = ImGuiLink::GetMousePos().y;
-			mx -= m_ViewportBounds[0].x;
-			my -= m_ViewportBounds[0].y;
-			glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-			my = viewportSize.y - my;
-			int mouseX = (int)mx;
-			int mouseY = (int)my;
-
-			if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-			{
-				int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-				m_HoveredEntity = nullptr;
-				for (Entity* ent : *m_ActiveScene)
-				{
-					int id = 0;
-					for (char c : ent->GetID())
-					{
-						id += c;
-					}
-
-					if (id == pixelData)
-					{
-						VX_INFO("m_HoveredEntity is ", ent->name().c_str());
-						m_HoveredEntity = ent;
-						break;
-					}
-				}
-			}
-
-
+			Renderer2D::BeginScene(m_EditorCamera.GetViewProjection(), m_Colours[0], m_Colours[1], m_Colours[2]);
+			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
 			Renderer2D::EndScene();
 		}
+		else if (m_SceneState == SceneState::Play)
+		{
+			Ref<Camera> cam;
+			glm::mat4 p_cam;
+			if (m_ActiveScene->GetACameraInScene(&cam, true, &p_cam))
+			{
+				Renderer2D::BeginScene(cam->GetProjection(), p_cam, m_Colours[0], m_Colours[1], m_Colours[2]);
+				m_ActiveScene->OnUpdateRuntime(ts);
+				Renderer2D::EndScene();
+
+				
+				
+				
+
+
+				
+			}
+		}
+
+		// Handle mouse position and entity selection
+		auto mx = ImGuiLink::GetMousePos().x;
+		auto my = ImGuiLink::GetMousePos().y;
+		mx -= m_ViewportBounds[0].x;
+		my -= m_ViewportBounds[0].y;
+		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+		my = viewportSize.y - my;  // Flip the Y-axis to match viewport coordinate system
+		int mouseX = static_cast<int>(mx);
+		int mouseY = static_cast<int>(my);
+
+		if (mouseX >= 0 && mouseY >= 0 && mouseX < static_cast<int>(viewportSize.x) && mouseY < static_cast<int>(viewportSize.y))
+		{
+			int pixelData = m_Framebuffer2->ReadPixel(1, mouseX, mouseY);
+			m_HoveredEntity = nullptr;
+
+			for (Entity* ent : *m_ActiveScene)
+			{
+				int id = 0;
+				for (char c : ent->GetID())
+				{
+					id += c;
+				}
+
+				if (id == pixelData)
+				{
+					VX_INFO("m_HoveredEntity is {0}", ent->name().c_str());
+					m_HoveredEntity = ent;
+					break;
+				}
+			}
+		}
+		Renderer2D::EndScene();
+
+		if (m_SceneState == SceneState::Play)
+		{
+			Ref<Camera> cam;
+			glm::mat4 p_cam;
+			if (m_ActiveScene->GetACameraInScene(&cam, true, &p_cam))
+			{
+				m_3DShader->Bind();
+
+				rotation += 30 * ts;
+
+				glm::mat4 model = Math::ComposeTransform({ 0, 0, 1 }, { 1, 1, 1 }, { 0, rotation, 0 });
+				glm::mat4 view = glm::mat4(1.0f);
+				glm::mat4 proj = glm::mat4(1.0f);
+				proj = cam->GetProjection();
+
+				m_CheckerboardTexture->Bind();
+				
+
+
+				m_3DShader->UploadUniformInt("u_Tex0", 0); // Assuming 'u_Texture' is the uniform name in the shader
+				m_3DShader->UploadUniformMat4("u_Model", model);
+				m_3DShader->UploadUniformMat4("u_View", proj * glm::inverse(p_cam));
+				m_3DShader->UploadUniformMat4("u_Proj", glm::mat4(1.0f));
+
+				
+
+				RenderCommand::DrawIndexed(m_3DVA, m_3DVA->GetIndexBuffer()->GetCount());
+				m_3DShader->Unbind();
+			}
+
+		}
+
+		Renderer::De();
+		
+		
 		
 
+		// Post-process or apply full-screen effects after rendering
+		m_Framebuffer2->Unbind();
+
+		m_Framebuffer->Bind();
+		
+		DrawFullScreenQuad(m_FlatColorShader, m_Framebuffer2);
+		RenderCommand::Init();
+
 		m_Framebuffer->Unbind();
+
+		
 	}
+
 
 	void EditorLayer::OnImGuiRender()
 	{
@@ -207,7 +463,7 @@ namespace Vertex {
 
 		ImGuiLink::Docking(dockingEnabled, [this] { DockSpaceCallback(); });
 
-		if (0)
+		if (!dockingEnabled)
 		{
 			
 			ImGuiLink::Begin("Settings");
@@ -221,8 +477,8 @@ namespace Vertex {
 
 			ImGuiLink::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
-			uint32_t textureID = m_CheckerboardTexture->GetRendererID();
-			ImGuiLink::Image((void*)textureID, glm::vec2{ 0, 1 }, glm::vec2{ 1, 0 });
+			uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+			ImGuiLink::Image((void*)textureID, glm::vec2(200, 200), glm::vec2{0, 1}, glm::vec2{1, 0});
 
 			
 
@@ -244,7 +500,11 @@ namespace Vertex {
 
 	void EditorLayer::onMessage(Message* message)
 	{
-		
+		if (message->code == "LOAD_MAP")
+		{
+			LoadMapMessage* map = (LoadMapMessage*)message;
+			VX_INFO(map->GetMapName().c_str());
+		}
 	}
 
 	void EditorLayer::DockSpaceCallback()
@@ -285,6 +545,14 @@ namespace Vertex {
 
 		ImGui::Text("FPS: %d", static_cast<int>(std::round(Time::GetFPS())));
 
+		ImGui::Text("Colours");
+		for (int i = 0; i < 3; i++)
+		{
+			ImGui::ColorEdit4((std::string("Colour ") + std::to_string(i + 1)).c_str(), glm::value_ptr(m_Colours[i]));
+		}
+
+		ImGui::Text("Ticks %d", Time::GetTicks());
+
 		if (true)
 		{
 			ImGuiLink::Separator();
@@ -322,6 +590,7 @@ namespace Vertex {
 		if (m_ViewportSize != viewportPanelSize)
 		{
 			m_Framebuffer->Resize((uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y);
+			m_Framebuffer2->Resize((uint32_t)viewportPanelSize.x, (uint32_t)viewportPanelSize.y);
 			m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 			m_CameraController.OnResize(viewportPanelSize.x, viewportPanelSize.y);
@@ -329,7 +598,7 @@ namespace Vertex {
 		}
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-		ImGuiLink::Image((void*)textureID, glm::vec2{ Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight() }, glm::vec2{ 0, 1 }, glm::vec2{ 1, 0 });
+		ImGuiLink::Image((void*)textureID, glm::vec2{ viewportPanelSize.x, viewportPanelSize.y }, glm::vec2{ 1, 0 }, glm::vec2{ 0, 1 });
 
 		auto windowSize = ImGuiLink::GetWindowSize();
 		auto minBound = ImGuiLink::GetWindowPos();

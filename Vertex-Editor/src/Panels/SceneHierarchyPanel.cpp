@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "VXEntities.h"
 #include <VXEntities/Scripting/ScriptEngine.h>
+#include <Vertex/Renderer/TextureManager.h>
 
 #define ImGuiTreeNodeFlags_Selected 1
 #define ImGuiTreeNodeFlags_OpenOnArrow 128
@@ -69,6 +70,12 @@ namespace Vertex {
 		ImGuiLink::End();
 
 		ImGuiLink::Begin("Properties");
+
+		if (m_SelectionContext->IsNULL())
+		{
+			m_SelectionContext = nullptr;
+		}
+
 		if (m_SelectionContext)
 			DrawEntity(m_SelectionContext);
 		ImGuiLink::End();
@@ -99,6 +106,11 @@ namespace Vertex {
 				if (type == "env_script")
 				{
 					m_Context->CreateEntity<ENTEnvScript>(tag);
+				}
+
+				if (type == "trigger_changelevel_circle")
+				{
+					m_Context->CreateEntity<ENTTriggerChangeLevelCircle>(tag);
 				}
 
 				if (type == "point_camera_2d")
@@ -162,7 +174,7 @@ namespace Vertex {
 	Entity* EntityToRemove = nullptr;
 	void DrawBaseEntity(Entity* entity)
 	{
-		
+		if (entity->IsNULL()) return;
 		auto& tag = entity->name();
 
 		char buffer[256];
@@ -192,6 +204,7 @@ namespace Vertex {
 
 	void DrawCameraProp(ENTPointCamera2D* entity)
 	{
+		if (entity->IsNULL()) return;
 		if (ImGuiLink::TreeNodeEx((void*)typeid(ENTPointCamera2D).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Point Camera 2D"))
 		{
 			auto& camera = entity->camera;
@@ -248,6 +261,7 @@ namespace Vertex {
 
 	void DrawStaticDynamicRendererProp(ENTPropDynamicSprite* entity)
 	{
+		if (entity->IsNULL()) return;
 		if (ImGuiLink::TreeNodeEx((void*)typeid(ENTPropDynamicSprite).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
 		{
 
@@ -274,7 +288,7 @@ namespace Vertex {
 
 					if (isValidExtension)
 					{
-						entity->texture = Texture2D::Create(texturePath.string());
+						entity->texture = TextureManager2D::GetOrMakeTextureFromFilename(texturePath.string());
 					}
 
 				}
@@ -288,6 +302,7 @@ namespace Vertex {
 
 	void DrawStaticSpriteRendererProp(ENTPropStaticSprite* entity)
 	{
+		if (entity->IsNULL()) return;
 		if (ImGuiLink::TreeNodeEx((void*)typeid(ENTPropStaticSprite).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Sprite Renderer"))
 		{
 			
@@ -328,6 +343,7 @@ namespace Vertex {
 
 	void DrawBoxCollider2DImGui(ENTBaseBoxCollier2D* ent)
 	{
+		if (ent->IsNULL()) return;
 		if (ImGuiLink::TreeNodeEx((void*)typeid(ENTBaseBoxCollier2D).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Box Collider 2D"))
 		{
 			ImGui::DragFloat2("Offset", glm::value_ptr(ent->Offset));
@@ -341,6 +357,7 @@ namespace Vertex {
 
 	void DrawRB2DImGui(ENTBaseRigidbody2D* ent)
 	{
+		if (ent->IsNULL()) return;
 		if (ImGuiLink::TreeNodeEx((void*)typeid(ENTBaseRigidbody2D).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Rigidbody 2D"))
 		{
 			
@@ -372,6 +389,7 @@ namespace Vertex {
 
 	void DrawEnvScript(ENTEnvScript* script, Scene* scene)
 	{
+		if (script->IsNULL()) return;
 		int ENTBaseRigidbody2DID = typeid(ENTBaseRigidbody2D).hash_code() + (int)script;
 		if (script->useRB2D && ImGuiLink::TreeNodeEx((void*)ENTBaseRigidbody2DID, ImGuiTreeNodeFlags_DefaultOpen, "Rigidbody 2D"))
 		{
@@ -431,7 +449,13 @@ namespace Vertex {
 			if (!scriptClassExists)
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
-			ImGui::InputText("Class Name", script->classname.data(), 128);
+			char buffer[256];
+			memset(buffer, 0, sizeof(buffer));
+			strcpy_s(buffer, sizeof(buffer), script->classname.c_str());
+			if (ImGui::InputText("Class Name", buffer, 256))
+			{
+				script->classname = std::string(buffer);;
+			}
 
 
 			if (!scriptClassExists)
@@ -507,9 +531,21 @@ namespace Vertex {
 		}
 	}
 
+	void DrawTriggerChangeLevelCircle(ENTTriggerChangeLevelCircle* entity)
+	{
+		if (ImGuiLink::TreeNodeEx((void*)typeid(ENTTriggerChangeLevelCircle).hash_code(), ImGuiTreeNodeFlags_DefaultOpen, "Trigger Change Level Circle"))
+		{
+			ImGui::InputText("File Name", entity->filename.data(), 128);
+			ImGui::InputText("Target Name", entity->TargetName.data(), 128);
+			ImGui::DragFloat("Circle Size", &entity->CircleSize, 0.1f, 0.01f, 10);
+			ImGuiLink::TreePop();
+		}
+	}
+
 	void SceneHierarchyPanel::DrawEntity(Entity* entity)
 	{
 		if (entity == nullptr) return;
+		if (entity->IsNULL()) return;
 		DrawBaseEntity(entity);
 		if (EntityToRemove != nullptr)
 		{
@@ -529,6 +565,7 @@ namespace Vertex {
 			DrawRB2DImGui(rb2D);
 		}
 
+		if (entity->GetEntName() == "trigger_changelevel_circle") { DrawTriggerChangeLevelCircle((ENTTriggerChangeLevelCircle*)entity); }
 		if (entity->GetEntName() == "env_script") { DrawEnvScript((ENTEnvScript*)entity, m_Context); }
 
 	}

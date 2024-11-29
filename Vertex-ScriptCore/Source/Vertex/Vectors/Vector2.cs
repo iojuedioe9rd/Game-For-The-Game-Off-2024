@@ -2,7 +2,7 @@
 
 namespace Vertex
 {
-    public struct Vector2
+    public struct Vector2 : IEquatable<Vector2>
     {
         public float X, Y;
 
@@ -32,6 +32,18 @@ namespace Vertex
                 else if (index == 1) Y = value;
                 else throw new IndexOutOfRangeException("Index out of range for Vector2");
             }
+        }
+
+        public static float Distance(Vector2 a, Vector2 b)
+        {
+            float x1, x2, y1, y2;
+            x1 = a.X;
+            y1 = a.Y;
+            x2 = b.X;
+            y2 = b.Y;
+
+            float distance = Mathf.Distance(x1, y1, x2, y2);
+            return distance;
         }
 
         // Static properties for common vectors
@@ -80,5 +92,7 @@ namespace Vertex
 
         // Simple GetHashCode implementation
         public override int GetHashCode() => X.GetHashCode() ^ Y.GetHashCode();
+
+        public bool Equals(Vector2 obj) => obj is Vector2 other && this == other;
     }
 }

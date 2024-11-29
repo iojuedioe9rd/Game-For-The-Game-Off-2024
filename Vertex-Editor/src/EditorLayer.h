@@ -7,9 +7,12 @@
 #include "Panels/SceneHierarchyPanel.h"
 #include <Vertex/Events/KeyEvent.h>
 #include <Vertex/Events/Event.h>
+#include <Vertex/Utils/Utils.h>
 #include <VXEntities/Scene/EditorCamera.h>
 #include "Panels/ContentBrowserPanel.h"
 #include <filesystem>
+
+
 
 namespace Vertex {
 
@@ -46,6 +49,12 @@ namespace Vertex {
 		void UI_Toolbar();
 	private:
 
+		
+
+		Ref<Texture2D> m_Bg1;
+		Ref<Texture2D> m_Bg2;
+
+		glm::vec4 m_Colours[3] = { {1, 0, 0, 1}, {0, 1, 0, 1}, {0, 0, 1, 1} };
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 
@@ -53,8 +62,13 @@ namespace Vertex {
 
 		// Temp
 		Ref<VertexArray> m_SquareVA;
+
+		Ref<VertexArray> m_3DVA;
+		Ref<Shader> m_3DShader;
+
 		Ref<Shader> m_FlatColorShader;
 		Framebuffer* m_Framebuffer;
+		Framebuffer* m_Framebuffer2;
 
 		ENTPointCamera2D* m_CameraEntity;
 		ENTPointCamera2D* m_SecondCamera;

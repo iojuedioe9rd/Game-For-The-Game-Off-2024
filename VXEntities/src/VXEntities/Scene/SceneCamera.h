@@ -32,6 +32,8 @@ namespace Vertex
 		void SetOrthographicFarClip(float farClip) { m_OrthographicFar = farClip; RecalculateProjection(); }
 		ProjectionType GetProjectionType() const { return m_ProjectionType; }
 		void SetProjectionType(ProjectionType type) { m_ProjectionType = type; RecalculateProjection(); }
+
+		glm::vec2 ScreenToWorldPoint(glm::vec2 ScreenPoint);
 	private:
 		void RecalculateProjection();
 	private:

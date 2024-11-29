@@ -20,6 +20,7 @@ Entities:
     PropStaticSprite:
       Colour: [1, 1, 1, 1]
       TilingFactor: 1
+	  TexturePath: assets/textures/Checkerboard.png
   - Entity: e18p-as-x4-0s-l6202e-f1trf9-vc-93-0-xbh8s2-6y3
     Tag: Camera
     EntityType: point_camera_2d

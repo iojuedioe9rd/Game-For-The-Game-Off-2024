@@ -2,6 +2,7 @@ project "Vertex-ScriptCore"
 	kind "SharedLib"
 	language "C#"
 	dotnetframework "4.7.2"
+	clr "Unsafe"
 	
 	targetdir ("../Vertex-Editor/Resources/Scripts")
 	objdir ("../Vertex-Editor/Resources/Scripts/Intermediates")

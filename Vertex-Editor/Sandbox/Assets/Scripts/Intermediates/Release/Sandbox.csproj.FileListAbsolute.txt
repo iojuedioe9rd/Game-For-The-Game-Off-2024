@@ -1,0 +1,9 @@
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Binaries\Sandbox.dll
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Binaries\Sandbox.pdb
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Binaries\Vertex-ScriptCore.dll
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Binaries\Vertex-ScriptCore.pdb
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Intermediates\Release\Sandbox.csproj.AssemblyReference.cache
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Intermediates\Release\Sandbox.csproj.CoreCompileInputs.cache
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Intermediates\Release\Sandbox.csproj.Up2Date
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Intermediates\Release\Sandbox.dll
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Sandbox\Assets\Scripts\Intermediates\Release\Sandbox.pdb

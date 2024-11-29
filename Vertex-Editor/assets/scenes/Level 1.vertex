@@ -1,0 +1,120 @@
+Scene: Untitled
+Entities:
+  - Entity: cpy-iq-sn-1s-a7rpvn-d2vga4-oz-dl-tr-36p4-exv
+    Tag: Floor
+    EntityType: prop_static_sprite
+    Transform:
+      Translation: [0, 0, 0]
+      Size: [9.30000019, 1, 1]
+      Rotation: [0, 0, 0]
+    BaseRigidbody2D:
+      BodyType: Static
+      FixedRotation: false
+    BaseBoxCollier2D:
+      Offset: [0, -24]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    PropStaticSprite:
+      Colour: [0.508936465, 0.544401526, 0.145033613, 1]
+      TexturePath: assets\textures\build_1.png
+      TilingFactor: 1
+  - Entity: pbph-2g-2n-lh-qz9loy-71v4zi-rs-6o-i8-2xybzx-rz2
+    Tag: Camera
+    EntityType: point_camera_2d
+    Transform:
+      Translation: [0, 4.30000019, 16.8999996]
+      Size: [1, 1, 1]
+      Rotation: [0, 0, 0]
+    PointCamera2D:
+      ProjectionType: 0
+      PerspectiveFOV: 0.785398185
+      PerspectiveNear: 0.00999999978
+      PerspectiveFar: 1000
+      OrthographicSize: 10
+      OrthographicNear: -1
+      OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 9t08-ig-1k-ra-5taixr-9ynpl0z-5v-v4-r-9rfx4y-326
+    Tag: Player
+    EntityType: env_script
+    Transform:
+      Translation: [0, 4.19999981, 0]
+      Size: [1, 1, 1]
+      Rotation: [0, 0, 0]
+    EnvScript:
+      Classname: Sandbox.Player
+      ScriptFields:
+        - Name: Speed
+          Type: Float
+          Data: 10
+  - Entity: it3r-sm-ck-e6-7025li-6q8714-gr-9h-fs-ettdd-avp
+    Tag: Floor 2
+    EntityType: prop_static_sprite
+    Transform:
+      Translation: [14.3999996, 0.100000001, 0]
+      Size: [9.60000038, 1, 1]
+      Rotation: [0, 0, 0]
+    BaseRigidbody2D:
+      BodyType: Static
+      FixedRotation: false
+    BaseBoxCollier2D:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    PropStaticSprite:
+      Colour: [0.55914551, 0.590733588, 0.109479584, 1]
+      TilingFactor: 1
+  - Entity: f21x-zo-m6-2k-mkifdp-0hbkvpm-oh-yq-12-g3755b-vng
+    Tag: name
+    EntityType: prop_static_sprite
+    Transform:
+      Translation: [28.5, 0.699999988, 0]
+      Size: [15.8000002, 0.800000012, 1]
+      Rotation: [0, 0, 0]
+    BaseRigidbody2D:
+      BodyType: Static
+      FixedRotation: false
+    BaseBoxCollier2D:
+      Offset: [0, 0]
+      Size: [0.5, 0.5]
+      Density: 1
+      Friction: 0.5
+      Restitution: 0
+      RestitutionThreshold: 0.5
+    PropStaticSprite:
+      Colour: [0.699127734, 0.776061773, 0.20675005, 1]
+      TexturePath: assets\textures\bg1_0.png
+      TilingFactor: 1
+  - Entity: cxm-qx-rg-fi-bm8eae-c5nle4h-pl-67-io-dhn52n-te6
+    Tag: e
+    EntityType: env_script
+    Transform:
+      Translation: [0, 0, 0]
+      Size: [1, 1, 1]
+      Rotation: [0, 0, 0]
+    EnvScript:
+      Classname: Sandbox.Parallax
+      ScriptFields:
+        - Name: startPos
+          Type: Float
+          Data: -555
+  - Entity: dz2s-xi-kh-dx-1qxd1o-zoylct4-zh-4n-hk-d84gzd-v80
+    Tag: Enemy Spawner
+    EntityType: env_script
+    Transform:
+      Translation: [0, 0, 0]
+      Size: [1, 1, 1]
+      Rotation: [0, 0, 0]
+    EnvScript:
+      Classname: Sandbox.EnemySpawner
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 3

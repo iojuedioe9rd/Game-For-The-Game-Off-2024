@@ -9,6 +9,8 @@
 #include "Vertex/CustomFileFormat/FakeFS.h"
 #include "Vertex/Message/messageBus.h"
 
+namespace fs = std::filesystem;
+
 static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 {
 	switch (type)
@@ -40,6 +42,24 @@ namespace Vertex
 	}
 	Application* Application::app = nullptr;
 
+	std::vector<fs::path> GetAllFilesInDir(fs::path plugins)
+	{
+		std::vector<fs::path> files = std::vector<fs::path>();
+		for (const auto& entry : fs::directory_iterator(plugins))
+		{
+			if (entry.is_directory())
+			{
+				auto subdir_files = GetAllFilesInDir(entry);
+				files.insert(files.end(), subdir_files.begin(), subdir_files.end());
+			}
+			else if (entry.is_regular_file())
+			{
+				// Add regular files to the list
+				files.push_back(entry.path());
+			}
+		}
+		return files;
+	}
 	
 	Application::Application(const std::string& name, uint32_t width, uint32_t height, ApplicationCommandLineArgs args)
 		: m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CommandLineArgs(args)
@@ -63,10 +83,26 @@ namespace Vertex
 		PushOverlay(m_ImGuiLayer);
 
 		
+		const fs::path plugins{ "plugins" };
+		if (fs::exists(plugins))
+		{
+			std::vector<fs::path> files = GetAllFilesInDir(plugins);
 
+			VX_CORE_TRACE("Plugins:");
 
+			for (fs::path file : files)
+			{
+				VX_CORE_TRACE("	{}", file.string().c_str());
+				Ref<DynamicLibraryInstance> Instance = NewDLLInstance(file.string());
+				Instance->loadLibrary();
+			}
+		}
+
+		std::cout << "Current path is " << fs::current_path() << '\n'; // (1)
 		
 	}
+
+	
 
 	void Application::PushLayer(Layer* layer)
 	{
@@ -107,6 +143,8 @@ namespace Vertex
 
 
 	float m_LastFrameTime = 0.0f;
+	float m_TickTimer = 0.0f;
+	uint32_t m_Ticks = 0;
 	void Application::Update()
 	{
 		VX_PROFILE_FUNCTION();
@@ -114,10 +152,19 @@ namespace Vertex
 		float time = (float)Time::GetTime();
 		Timestep timestep = time - m_LastFrameTime;
 		m_LastFrameTime = time;
+		m_TickTimer += timestep;
 
-		Time::m_Timestep = timestep;
+		Time::s_Timestep = timestep;
 		//m_Window->SetVSync(false);
 		Time::FPS = GetFPS();
+
+		if (m_TickTimer >= 0.025f)
+		{
+			m_Ticks++;
+			m_TickTimer = 0;
+		}
+
+		Time::s_Ticks = m_Ticks;
 
 		MessageBus::update();
 		ExecuteMainThreadQueue();

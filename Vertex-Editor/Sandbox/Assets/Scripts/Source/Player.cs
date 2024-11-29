@@ -9,8 +9,14 @@ namespace Sandbox
 {
     public class Player : ENTBaseBoxCollier2D
     {
+        public HealthSystem healthSystem;
+        public int LOL;
+
         public float Speed = 100.0f;
+        public float JumpTime = 0.0f;
         public float Time = 0.0f;
+         
+        public List<Gun> Guns = new List<Gun>();
 
         public Player(string uuid) : base(uuid)
         {
@@ -32,7 +38,9 @@ namespace Sandbox
         {
             base.OnDraw();
             //Logger.Info("Run");
-            Renderer2D.DrawQuad(Pos, Size, "assets/textures/Player.png", 1.0f, new Colour(1, 1, 1, 1));
+            float offset = (float)Math.Sin(Convert.ToDouble(Time)) / 10 + .1f;
+
+            Renderer2D.DrawQuad(Pos + new Vector3(0, offset, 0), Size, "assets/textures/GamePlayer.png", 1.0f, new Colour(1, 1, 1, 1));
         }
 
         protected override void OnPhysUpdate(float ts)
@@ -42,7 +50,7 @@ namespace Sandbox
 
         protected override void OnUpdate(float ts)
         {
-            Time += ts;
+            Time += ts * 3;
 
             //Logger.Info("Pos");
             //Logger.Info(Pos);
@@ -63,6 +71,26 @@ namespace Sandbox
                 velocity.X = -1.0f;
             else if (Input.IsKeyDown(KeyCode.D))
                 velocity.X = 1.0f;
+
+            if(Input.IsKeyDown(KeyCode.Space))
+            {
+                JumpTime += ts * 2.5f;
+            }
+
+            if (Input.IsKeyUp(KeyCode.Space))
+            {
+                if(JumpTime != 0.0f)
+                {
+                    
+                }
+                ApplyLinearImpulse(Vector2.Up * JumpTime * 2.5f, true);
+                JumpTime = 0.0f;
+            }
+
+            if (Input.IsMouseButtonPressed(MouseCode.ButtonLeft))
+            {
+                Logger.Info(Input.GetMousePos(true));
+            }
 
             velocity *= speed;
 

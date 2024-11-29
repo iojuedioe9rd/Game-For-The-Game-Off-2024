@@ -78,6 +78,8 @@ namespace Vertex {
 		MonoMethod* GetMethod(const std::string& name, int parameterCount);
 		MonoObject* InvokeMethod(MonoObject* instance, MonoMethod* method, void** params = nullptr);
 
+		void* GetMonoClass() { return m_MonoClass; }
+
 		const std::map<std::string, ScriptField>& GetFields() const { return m_Fields; }
 	private:
 		std::string m_ClassNamespace;
@@ -160,6 +162,7 @@ namespace Vertex {
 
 		static bool EntityClassExists(const std::string& fullClassName);
 		static void OnCreateEntity(Entity* entity, std::function<bool(ENTEnvScript*)> func);
+		static void OnRemoveEntity(Entity* entity, std::function<bool(ENTEnvScript*)> func);
 		static void OnUpdateEntity(Entity* entity, Timestep ts);
 		static void OnPhysUpdateEntity(Entity* entity, Timestep ts);
 		static void OnDrawEntity(Entity* entity);

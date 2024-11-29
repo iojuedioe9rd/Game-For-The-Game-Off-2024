@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 namespace Vertex
 {
@@ -11,6 +11,14 @@ namespace Vertex
 
     public static class InternalCalls
     {
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void Input_GetMousePosWorld(ref Vector2 pos);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void Input_GetMousePos(ref Vector2 pos);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static bool Input_IsMouseButtonPressed(MouseCode button);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static void NativeLog(string text, int parameter);
@@ -60,10 +68,22 @@ namespace Vertex
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static string Entity_FindEntityByName(string name);
 
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static string Entity_NewEntity(string FullName, string name, ref Vector3 translation, ref Vector3 size, ref Vector3 rotation);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static bool Entity_RemoveEntity(string name);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static string[] Entity_FindEntitiesByName(string name);
+
         #endregion
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static bool Input_IsKeyDown(KeyCode keycode);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static bool Input_IsKeyUp(KeyCode keycode);
 
         #region RB 2D Entity
 

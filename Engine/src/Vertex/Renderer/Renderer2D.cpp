@@ -150,18 +150,32 @@ namespace Vertex {
 		VX_PROFILE_FUNCTION();
 	}
 
-	void Renderer2D::BeginScene(const OrthographicCamera& camera)
+	void Renderer2D::BeginScene(const OrthographicCamera& camera, glm::vec4 u_Color1, glm::vec4 u_Color2, glm::vec4 u_Color3)
 	{
 		VX_PROFILE_FUNCTION();
-		BeginScene(camera.GetViewProjectionMatrix());
+		BeginScene(camera.GetViewProjectionMatrix(), u_Color1, u_Color2, u_Color3);
 	}
 
-	void Renderer2D::BeginScene(const glm::mat4 viewProjectionMatrix)
+	float t = 0;
+
+	void Renderer2D::BeginScene(const glm::mat4 viewProjectionMatrix, glm::vec4 u_Color1, glm::vec4 u_Color2, glm::vec4 u_Color3)
 	{
 		VX_PROFILE_FUNCTION();
 
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->UploadUniformMat4("u_ViewProjection", viewProjectionMatrix);
+
+		// Upload the CRT effect uniforms
+		s_Data.TextureShader->UploadUniformFloat("u_ScanlineIntensity", 0.3f); // Set desired intensity
+		s_Data.TextureShader->UploadUniformFloat("u_ScanlineWidth", 0.1f);      // Set desired width
+		s_Data.TextureShader->UploadUniformFloat("u_BloomStrength", 1.5f);      // Set desired bloom strength
+		s_Data.TextureShader->UploadUniformFloat("u_CRTDistortion", 0.005f);
+
+		s_Data.TextureShader->UploadUniformFloat4("u_Color1", u_Color1);
+		s_Data.TextureShader->UploadUniformFloat4("u_Color2", u_Color2);
+		s_Data.TextureShader->UploadUniformFloat4("u_Color3", u_Color3);
+
+		s_Data.TextureShader->UploadUniformFloat("u_Time", Time::GetTime());
 
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
@@ -172,15 +186,11 @@ namespace Vertex {
 		s_Data.TextureSlotIndex = 1;
 	}
 
-	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform, glm::vec4 u_Color1, glm::vec4 u_Color2, glm::vec4 u_Color3)
 	{
 		VX_PROFILE_FUNCTION();
 		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->UploadUniformMat4("u_ViewProjection", viewProj);
-		s_Data.QuadIndexCount = 0;
-		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-		s_Data.TextureSlotIndex = 1;
+		BeginScene(viewProj, u_Color1, u_Color2, u_Color3);
 	}
 
 	void Renderer2D::EndScene()

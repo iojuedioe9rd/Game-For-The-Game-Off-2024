@@ -27,6 +27,7 @@
 #include <mono/metadata/metadata.h>
 #include <mono/metadata/debug-helpers.h>
 #include "mono/metadata/object.h"
+#include "Entities/trigger_changelevel_circle/trigger_changelevel_circle.h"
 
 #define SPACE_CHAR ' '
 
@@ -114,11 +115,47 @@ namespace Vertex {
 		return nullptr;
 	}
 
+	Entity* Scene::FindEntityByID(std::string_view id)
+	{
+		for (Entity* ent : *this)
+		{
+			if (ent->GetID() == id)
+			{
+				return ent;
+			}
+		}
+		return nullptr;
+	}
+
 	bool Scene::RemoveEntity(Entity& entity)
 	{
+		entity.RemoveTime();
 		m_Entitys.erase(std::remove(m_Entitys.begin(), m_Entitys.end(), &entity), m_Entitys.end());
 		delete& entity;
 		return true;
+	}
+
+	std::vector<Entity*> Scene::FindEntitiesByName(std::string_view name, std::string_view type)
+	{
+		std::vector<Entity*> entities;
+
+		for (Entity* ent: *this)
+		{
+			
+			if (type.empty())
+			{
+				if(ent->name() == name)
+					entities.emplace_back(ent);
+			}
+			else
+			{
+				if (ent->GetEntName() == type && ent->name() == name)
+					entities.emplace_back(ent);
+
+				
+			}
+		}
+		return entities;
 	}
 
 	b2Body* SetupRB2D(ENTBaseRigidbody2D* rb2d, b2World* m_PhysicsWorld)
@@ -356,7 +393,8 @@ namespace Vertex {
 	{
 		for (Entity* ent : m_Entitys)
 		{
-			ent->UpdateTime(ts);
+			if(ent != nullptr)
+				ent->UpdateTime(ts);
 		}
 
 		if (m_PhysicsWorld != nullptr)
@@ -446,6 +484,7 @@ namespace Vertex {
 			CopyEntity<ENTProp2DCircle>(dynamic_cast<ENTProp2DCircle*>(ent), newScene, true);
 			CopyEntity<ENTPointCamera2D>(dynamic_cast<ENTPointCamera2D*>(ent), newScene, true);
 			CopyEntity<ENTEnvStaticTilemap>(dynamic_cast<ENTEnvStaticTilemap*>(ent), newScene, true);
+			CopyEntity<ENTTriggerChangeLevelCircle>(dynamic_cast<ENTTriggerChangeLevelCircle*>(ent), newScene, true);
 			CopyEntity<ENTEnvScript>(dynamic_cast<ENTEnvScript*>(ent), newScene, true);
 		}
 

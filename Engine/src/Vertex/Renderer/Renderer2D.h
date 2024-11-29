@@ -12,9 +12,9 @@ namespace Vertex {
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene(const OrthographicCamera& camera);
-		static void BeginScene(const glm::mat4 viewProjectionMatrix);
-		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const OrthographicCamera& camera, glm::vec4 u_Color1, glm::vec4 u_Color2, glm::vec4 u_Color3);
+		static void BeginScene(const glm::mat4 viewProjectionMatrix, glm::vec4 u_Color1, glm::vec4 u_Color2, glm::vec4 u_Color3);
+		static void BeginScene(const Camera& camera, const glm::mat4& transform, glm::vec4 u_Color1, glm::vec4 u_Color2, glm::vec4 u_Color3);
 		static void EndScene();
 		static void Flush();
 

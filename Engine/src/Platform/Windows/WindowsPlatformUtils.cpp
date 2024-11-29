@@ -8,7 +8,15 @@
 #include <GLFW/glfw3native.h>
 
 #include "Vertex/Core/Application.h"
+#include "Vertex/Core/Logger.h"
 #include <stb_image.h>
+
+wchar_t* convertCharArrayToLPCWSTR(const char* charArray)
+{
+	wchar_t* wString = new wchar_t[4096];
+	MultiByteToWideChar(CP_ACP, 0, charArray, -1, wString, 4096);
+	return wString;
+}
 
 namespace Vertex {
 
@@ -123,7 +131,7 @@ namespace Vertex {
 		stbi_image_free(tex);
 	}
 
-	Timestep Time::m_Timestep;
+	Timestep Time::s_Timestep;
 	float Time::GetTime()
 	{
 		return glfwGetTime();
@@ -136,11 +144,40 @@ namespace Vertex {
 	*/
 
 	float Time::FPS;
+	uint32_t Time::s_Ticks;
 	
 	float Time::GetFPS()
 	{
 		return FPS;
 	}
+
+	void* DynamicLibraryInstance::GetProcAddressWrapper(void* hLibrary, const char* funcName)
+	{
+		return GetProcAddress(static_cast<HMODULE>(hLibrary), funcName);
+	}
+	
+
+	void* DynamicLibraryInstance::LoadLibraryWrapper(const char* name)
+	{
+		void* hLibrary = LoadLibrary(convertCharArrayToLPCWSTR(name));
+		if (!hLibrary) {
+			DWORD errorCode = GetLastError();
+			LPVOID errorMsg;
+			FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&errorMsg, 0, NULL);
+			VX_CORE_ERROR("Failed to load library \"{}\". {} - {}", name, errorCode, static_cast<char*>(errorMsg));
+			//printLastError();
+			return false;
+		}
+		return hLibrary;
+	}
+	void DynamicLibraryInstance::FreeLibraryWrapper(void* hLibrary) 
+	{
+		
+		FreeLibrary(static_cast<HMODULE>(hLibrary));
+	}
+
+	
 
 	// unsigned char* LoadTextureFromResource(int resourceID, const char* format, int* width, int* height, int* channels)
 }

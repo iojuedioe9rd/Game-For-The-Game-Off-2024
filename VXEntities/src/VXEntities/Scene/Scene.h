@@ -41,7 +41,10 @@ namespace Vertex
 			return *newEntity;
 		}
 		Entity* FindEntityByName(std::string_view name);
+		Entity* FindEntityByID(std::string_view id);
 		bool RemoveEntity(Entity& entity);
+
+		std::vector<Entity*> FindEntitiesByName(std::string_view name, std::string_view type = "");
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();
@@ -73,6 +76,8 @@ namespace Vertex
 				}
 			}
 		}
+
+		b2World* GetPhysicsWorld() { return m_PhysicsWorld; }
 
 		std::vector<Entity*>::iterator begin() { return m_Entitys.begin(); }
 		std::vector<Entity*>::iterator end() { return m_Entitys.end(); }

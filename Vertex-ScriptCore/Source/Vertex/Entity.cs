@@ -42,12 +42,38 @@ namespace Vertex
         }
 
 
-        public Entity FindEntityByName(string name)
+        public static Entity FindEntityByName(string name)
         {
             string entityID = InternalCalls.Entity_FindEntityByName(name);
             if (entityID == string.Empty)
                 return null;
             return new Entity(entityID);
+        }
+
+        public static T NewEntity<T>(string name, Vector3 pos, Vector3 size, Vector3 rotation) where T : Entity, new()
+        {
+            string FullName = typeof(T).FullName;
+
+            Entity entity = new Entity(InternalCalls.Entity_NewEntity(FullName, name, ref pos, ref size, ref rotation));
+
+            return entity.As<T>();
+        }
+
+        public static T[] FindEntitiesByName<T>(string name) where T : Entity, new()
+        {
+            UUID[] entityIDS = InternalCalls.Entity_FindEntitiesByName(name);
+            T[] entities = new T[entityIDS.Length];
+
+            for (int i = 0; i < entityIDS.Length; i++)
+            {
+                entities[i] = new Entity(entityIDS[i]).As<T>();
+            } 
+            return entities;
+        }
+
+        public static bool RemoveEntity(Entity ent)
+        {
+            return InternalCalls.Entity_RemoveEntity(ent.UUID);
         }
 
         public Vector3 Size = Vector3.One;

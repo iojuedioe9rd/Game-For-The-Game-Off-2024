@@ -33,6 +33,8 @@ namespace Vertex
 		}
 		bool useRB2D = false;
 
+		virtual void Remove() override;
+
 		std::string classname;
 		SerializationObject obj;
 	private:

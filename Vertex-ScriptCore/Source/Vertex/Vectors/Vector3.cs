@@ -13,7 +13,7 @@ namespace Vertex
         public float Y;
         public float Z;
 
-        public Vector2 XY { get {  return new Vector2(X, Y); } }
+        public Vector2 XY { get {  return new Vector2(X, Y); } set { X = value.X; Y = value.Y; } }
 
         // Constructor
         public Vector3(float x, float y, float z)
@@ -37,6 +37,12 @@ namespace Vertex
 
         public static Vector3 Zero => new Vector3(0, 0, 0);
         public static Vector3 One => new Vector3(1, 1, 1);
+
+        public static float Dis(Vector3 a, Vector3 b)
+        {
+            float distance = Vector2.Distance(a.XY, b.XY);
+            return distance;
+        }
 
         // Indexer
         public float this[int index]

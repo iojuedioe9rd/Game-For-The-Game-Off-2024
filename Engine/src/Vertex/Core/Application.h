@@ -10,6 +10,7 @@
 #include "Vertex/Renderer/Buffer.h"
 #include "Vertex/Renderer/VertexArray.h"
 #include "Vertex/Renderer/OrthographicCamera.h"
+#include "Vertex/Utils/Utils.h"
 
 namespace Vertex
 {
@@ -48,6 +49,18 @@ namespace Vertex
 
 		void OnEvent(Event* e);
 
+		Ref<DynamicLibraryInstance> GetDLLInstance(std::string name)
+		{
+			return m_DynamicLibraryInstances[name];
+		}
+
+		Ref<DynamicLibraryInstance> NewDLLInstance(std::string fileName)
+		{
+			m_DynamicLibraryInstances[fileName] = Ref<DynamicLibraryInstance>(new DynamicLibraryInstance(fileName));
+			return m_DynamicLibraryInstances[fileName];
+		}
+
+
 		void SubmitToMainThread(const std::function<void()>& function);
 
 		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
@@ -66,6 +79,8 @@ namespace Vertex
 
 		std::vector<std::function<void()>> m_MainThreadQueue;
 		std::mutex m_MainThreadQueueMutex;
+
+		std::unordered_map<std::string, Ref<DynamicLibraryInstance>> m_DynamicLibraryInstances;
 
 		void ExecuteMainThreadQueue();
 

@@ -109,14 +109,34 @@ namespace Vertex {
 			return nullptr;
 		}
 
-
+		bool IsNULL();
+		
 
 #pragma endregion
 
 #pragma region Procedures
 		
+		void RemoveTime()
+		{
+			if (IsNULL())
+			{
+				return;
+			}
+			Remove();
+
+			for (Entity* ent : m_children)
+			{
+				ent->RemoveTime();
+			}
+		}
+
+
 		void UpdateTime(Timestep& ts)
 		{
+			if (IsNULL())
+			{
+				return; 
+			}
 			Update(ts);
 
 			for (Entity* ent : m_children)
@@ -160,6 +180,12 @@ namespace Vertex {
 		{
 
 		}
+
+		virtual void Remove()
+		{
+
+		}
+
 		virtual SerializationObject Serialize()
 		{
 			SerializationObject obj = SerializationObject();

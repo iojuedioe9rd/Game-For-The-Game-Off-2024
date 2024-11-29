@@ -18,6 +18,24 @@
 #include "Vertex/Renderer/TextureManager.h"
 #include "../Scene/Entities/Entities.h"
 
+#include "box2d/b2_world.h"
+#include "box2d/b2_body.h"
+#include "box2d/b2_fixture.h"
+#include "box2d/b2_polygon_shape.h"
+#include <mono/metadata/appdomain.h>
+
+static b2BodyType Rigidbody2DTypeToBox2DBody(Vertex::ENTBaseRigidbody2D::BodyType bodyType)
+{
+	switch (bodyType)
+	{
+	case Vertex::ENTBaseRigidbody2D::BodyType::Static:    return b2_staticBody;
+	case Vertex::ENTBaseRigidbody2D::BodyType::Dynamic:   return b2_dynamicBody;
+	case Vertex::ENTBaseRigidbody2D::BodyType::Kinematic: return b2_kinematicBody;
+	}
+	VX_CORE_ASSERT(false, "Unknown body type");
+	return b2_staticBody;
+}
+
 namespace Vertex
 {
 	
@@ -31,6 +49,31 @@ namespace Vertex
 #define LOG_ERROR     (1 << 4)    // 0b010000 = 16
 #define LOG_CRITICAL  (1 << 5)    // 0b100000 = 32
 
+	static void Input_GetMousePosWorld(glm::vec2* Pos)
+	{
+		glm::vec2 mousePos = Input::GetMousePositionVec2();
+
+		for (Entity* ent : *ScriptEngine::GetSceneContext())
+		{
+			if (ent->GetEntName() == "point_camera_2d")
+			{
+				ENTPointCamera2D* cam = (ENTPointCamera2D*)ent;
+				Ref<SceneCamera> camera = cam->camera;
+				*Pos = camera->ScreenToWorldPoint(mousePos);
+			}
+		}
+	}
+
+	static void Input_GetMousePos(glm::vec2* Pos)
+	{
+		*Pos = Input::GetMousePositionVec2();
+	}
+	
+	//internal extern static bool Input_IsMouseButtonPressed(MouseCode button);
+	bool Input_IsMouseButtonPressed(MouseCode button)
+	{
+		return Input::IsMouseButtonPressed(button);
+	}
 
 	static MonoString* Entity_FindEntityByName(MonoString* name)
 	{
@@ -41,23 +84,140 @@ namespace Vertex
 		mono_free(nameCStr);
 		if (!entity)
 			return mono_string_empty(ScriptEngine::GetAppDomain());
-		char* id = entity->GetID().data();
-		char* newID = new char[std::strlen(id) + 1];
 
-		std::strcpy(newID, id);
-		return mono_string_new(ScriptEngine::GetAppDomain(), newID);
+		return mono_string_new(ScriptEngine::GetAppDomain(), entity->GetID().c_str());
 	}
 
-	static MonoObject* GetScriptInstance(UUID entityID)
+	static MonoArray* Entity_FindEntitiesByName(MonoString* name)
 	{
-		return ScriptEngine::GetManagedInstance(entityID);
+		char* nameCStr = mono_string_to_utf8(name);
+		Scene* scene = ScriptEngine::GetSceneContext();
+		std::vector<Entity*> entities = scene->FindEntitiesByName(nameCStr, "env_script");
+		mono_free(nameCStr);
+
+		MonoArray* array = mono_array_new(ScriptEngine::GetAppDomain(), mono_get_string_class(), entities.size());
+
+		for (size_t i = 0; i < entities.size(); ++i) 
+		{
+			std::string entityId = entities[i]->GetID();
+			MonoString* monoEntityId = mono_string_new(ScriptEngine::GetAppDomain(), entityId.c_str());
+			mono_array_set(array, MonoString*, i, monoEntityId);
+		}
+
+		return array;
+
+	}
+
+	MonoClass* RB2DClass = nullptr;
+	MonoClass* BC2DClass = nullptr;
+
+	// internal extern static string Entity_NewEntity(string FullName, string name, ref Vector3 translation, ref Vector3 size, ref Vector3 rotation);
+	static MonoString* Entity_NewEntity(MonoString* FullName, MonoString* name, glm::vec3* translation, glm::vec3* size, glm::vec3* rotation)
+	{
+		char* FullNameCStr = mono_string_to_utf8(FullName);
+		char* nameCStr = mono_string_to_utf8(name);
+		Scene* scene = ScriptEngine::GetSceneContext();
+		ENTEnvScript* sc = &scene->CreateEntity<ENTEnvScript>(std::string(nameCStr));
+		sc->classname = std::string(FullNameCStr);
+		sc->pos = *translation;
+		sc->size = *size;
+		sc->rotation = *rotation;
+
+		ScriptEngine::OnCreateEntity(sc, [&](ENTEnvScript* sc) { return true; });
+
+		RB2DClass = ScriptEngine::GetMonoClassFromName(ScriptEngine::GetCoreAssemblyImage(), "Vertex", "ENTBaseRigidbody2D");
+		BC2DClass = ScriptEngine::GetMonoClassFromName(ScriptEngine::GetCoreAssemblyImage(), "Vertex", "ENTBaseBoxCollier2D");
+
+		Ref<ScriptInstance> Instance = ScriptEngine::GetEntityInstance(sc->GetID());
+
+		MonoClass* monoClass = (MonoClass*)Instance->GetScriptClass()->GetMonoClass();
+
+		if (ScriptEngine::IsSubclassOf(monoClass, BC2DClass, false))
+		{
+			MonoClassField* bodyTypeField = mono_class_get_field_from_name(RB2DClass, "Type");
+			int32_t bodyTypeEnumValue;
+			mono_field_get_value(Instance->GetManagedObject(), bodyTypeField, &bodyTypeEnumValue); // Pass the address of the variable
+
+			MonoClassField* fixedRotationField = mono_class_get_field_from_name(RB2DClass, "FixedRotation");
+			bool FixedRotation;
+			mono_field_get_value(Instance->GetManagedObject(), fixedRotationField, &FixedRotation); // Pass the address of the variable
+
+			b2BodyDef bodyDef;
+			bodyDef.type = Rigidbody2DTypeToBox2DBody((ENTBaseRigidbody2D::BodyType)bodyTypeEnumValue);
+			bodyDef.position.Set(sc->pos.x, sc->pos.y);
+
+			bodyDef.angle = sc->rotation.z;
+
+			b2Body* body = ScriptEngine::GetSceneContext()->GetPhysicsWorld()->CreateBody(&bodyDef);
+			body->SetFixedRotation(FixedRotation);
+
+
+
+			MonoClassField* bodyPtrField = mono_class_get_field_from_name(RB2DClass, "bodyPtr");
+
+
+
+			mono_field_set_value(Instance->GetManagedObject(), bodyPtrField, (void*)(&body));
+
+			b2PolygonShape boxShape;
+
+			boxShape.SetAsBox(0.5f * sc->size.x, 0.5f * sc->size.x);
+
+			b2FixtureDef fixtureDef;
+			fixtureDef.shape = &boxShape;
+
+			MonoClassField* densityField = mono_class_get_field_from_name(monoClass, "Density");
+			mono_field_get_value(Instance->GetManagedObject(), densityField, &fixtureDef.density); // Pass the address of the variable
+
+			// Friction
+			MonoClassField* frictionField = mono_class_get_field_from_name(monoClass, "Friction");
+			mono_field_get_value(Instance->GetManagedObject(), frictionField, &fixtureDef.friction); // Pass the address of the variable
+
+			// Restitution
+			MonoClassField* restitutionField = mono_class_get_field_from_name(monoClass, "Restitution");
+			mono_field_get_value(Instance->GetManagedObject(), restitutionField, &fixtureDef.restitution); // Pass the address of the variable
+
+			// Restitution
+			MonoClassField* restitutionThresholdField = mono_class_get_field_from_name(monoClass, "RestitutionThreshold");
+			mono_field_get_value(Instance->GetManagedObject(), restitutionThresholdField, &fixtureDef.restitutionThreshold); // Pass the address of the variable
+
+			body->CreateFixture(&fixtureDef);
+
+		}
+
+
+		return mono_string_new(ScriptEngine::GetAppDomain(), sc->GetID().c_str());
+	}
+
+	static bool Entity_RemoveEntity(MonoString* entityID)
+	{
+		char* entityIDCStr = mono_string_to_utf8(entityID);
+
+		Scene* scene = ScriptEngine::GetSceneContext();
+
+		Entity* ent = scene->FindEntityByID(entityIDCStr);
+
+		scene->RemoveEntity(*ent);
+
+		return ent == 0 ? 0 : 1;
+	}
+
+	static MonoObject* GetScriptInstance(MonoString* entityID)
+	{
+		char* nameCStr = mono_string_to_utf8(entityID);
+		return ScriptEngine::GetManagedInstance(std::string(nameCStr));
 	}
 
 	
 
 	static bool Input_IsKeyDown(KeyCode keycode)
 	{
-		return Input::IsKeyPressed(keycode);
+		return Input::IsKeyDown(keycode);
+	}
+
+	static bool Input_IsKeyUp(KeyCode keycode)
+	{
+		return Input::IsKeyUp(keycode);
 	}
 
 	// Texture2D_FromFilename
@@ -184,9 +344,10 @@ namespace Vertex
 				break;
 			}
 		}
-		VX_CORE_ASSERT(entity);
-
-		*outTranslation = entity->pos;
+		//VX_CORE_ASSERT(entity);
+		
+		if(entity)
+			*outTranslation = entity->pos;
 	}
 
 	static MonoString* Object_GenerateUUID()
@@ -236,8 +397,9 @@ namespace Vertex
 				break;
 			}
 		}
-		VX_CORE_ASSERT(entity);
-		entity->pos = *translation;
+		//VX_CORE_ASSERT(entity);
+		if (entity)
+			entity->pos = *translation;
 	}
 
 	static void NativeLog(MonoString* string, int parameter)
@@ -293,6 +455,10 @@ namespace Vertex
 
 	void ScriptGlue::RegisterFunctions()
 	{
+		VX_ADD_INTERNAL_CALL(Input_GetMousePosWorld);
+		VX_ADD_INTERNAL_CALL(Input_GetMousePos);
+		VX_ADD_INTERNAL_CALL(Input_IsMouseButtonPressed);
+
 		VX_ADD_INTERNAL_CALL(NativeLog);
 		VX_ADD_INTERNAL_CALL(NativeLog_Vector);
 		VX_ADD_INTERNAL_CALL(NativeLog_VectorDot);
@@ -310,8 +476,12 @@ namespace Vertex
 		VX_ADD_INTERNAL_CALL(Entity_GetTranslation);
 		VX_ADD_INTERNAL_CALL(Entity_SetTranslation);
 		VX_ADD_INTERNAL_CALL(Entity_FindEntityByName);
+		VX_ADD_INTERNAL_CALL(Entity_NewEntity);
+		VX_ADD_INTERNAL_CALL(Entity_RemoveEntity);
+		VX_ADD_INTERNAL_CALL(Entity_FindEntitiesByName);
 
 		VX_ADD_INTERNAL_CALL(Input_IsKeyDown);
+		VX_ADD_INTERNAL_CALL(Input_IsKeyUp);
 
 		VX_ADD_INTERNAL_CALL(Rigidbody2D_ApplyLinearImpulse);
 		VX_ADD_INTERNAL_CALL(Rigidbody2D_ApplyLinearImpulseToCenter);

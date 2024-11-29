@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "../../VXEntities.h"
 #include "../Scripting/ScriptEngine.h"
+#include <Vertex/Renderer/TextureManager.h>
 
 extern "C" uint64_t CustomChecksumAsm(const char* data, uint64_t length, uint64_t initialSeed, uint64_t rotateAmount, uint64_t additiveFactor, uint64_t rotateCount);
 
@@ -212,55 +213,71 @@ namespace Vertex {
 
 			// Fields
 			Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(script->classname);
-			const auto& fields = entityClass->GetFields();
-			if (fields.size() > 0)
+			if (entityClass)
 			{
-				out << YAML::Key << "ScriptFields" << YAML::Value;
-				auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
-
-				out << YAML::BeginSeq;
-
-				for (const auto& [name, field] : fields)
+				const auto& fields = entityClass->GetFields();
+				if (fields.size() > 0)
 				{
-					if (entityFields.find(name) == entityFields.end())
-						continue;
-					out << YAML::BeginMap;
+					out << YAML::Key << "ScriptFields" << YAML::Value;
+					auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
 
-					out << YAML::Key << "Name" << YAML::Value << name;
-					out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+					out << YAML::BeginSeq;
 
-					out << YAML::Key << "Data" << YAML::Value;
-					ScriptFieldInstance& scriptField = entityFields.at(name);
-
-					switch (field.Type)
+					for (const auto& [name, field] : fields)
 					{
-						WRITE_SCRIPT_FIELD(Float, float);
-						WRITE_SCRIPT_FIELD(Double, double);
-						WRITE_SCRIPT_FIELD(Bool, bool);
-						WRITE_SCRIPT_FIELD(Char, char);
-						WRITE_SCRIPT_FIELD(Byte, int8_t);
-						WRITE_SCRIPT_FIELD(Short, int16_t);
-						WRITE_SCRIPT_FIELD(Int, int32_t);
-						WRITE_SCRIPT_FIELD(Long, int64_t);
-						WRITE_SCRIPT_FIELD(UByte, uint8_t);
-						WRITE_SCRIPT_FIELD(UShort, uint16_t);
-						WRITE_SCRIPT_FIELD(UInt, uint32_t);
-						WRITE_SCRIPT_FIELD(ULong, uint64_t);
-						WRITE_SCRIPT_FIELD(Vector2, glm::vec2);
-						WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
-						WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
-						WRITE_SCRIPT_FIELD(Colour, glm::vec4);
-						//WRITE_SCRIPT_FIELD(Entity, UUID);
+						if (entityFields.find(name) == entityFields.end())
+							continue;
+						out << YAML::BeginMap;
+
+						out << YAML::Key << "Name" << YAML::Value << name;
+						out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+
+						out << YAML::Key << "Data" << YAML::Value;
+						ScriptFieldInstance& scriptField = entityFields.at(name);
+
+						switch (field.Type)
+						{
+							WRITE_SCRIPT_FIELD(Float, float);
+							WRITE_SCRIPT_FIELD(Double, double);
+							WRITE_SCRIPT_FIELD(Bool, bool);
+							WRITE_SCRIPT_FIELD(Char, char);
+							WRITE_SCRIPT_FIELD(Byte, int8_t);
+							WRITE_SCRIPT_FIELD(Short, int16_t);
+							WRITE_SCRIPT_FIELD(Int, int32_t);
+							WRITE_SCRIPT_FIELD(Long, int64_t);
+							WRITE_SCRIPT_FIELD(UByte, uint8_t);
+							WRITE_SCRIPT_FIELD(UShort, uint16_t);
+							WRITE_SCRIPT_FIELD(UInt, uint32_t);
+							WRITE_SCRIPT_FIELD(ULong, uint64_t);
+							WRITE_SCRIPT_FIELD(Vector2, glm::vec2);
+							WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
+							WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
+							WRITE_SCRIPT_FIELD(Colour, glm::vec4);
+							//WRITE_SCRIPT_FIELD(Entity, UUID);
+						}
+
+						out << YAML::EndMap;
 					}
 
-					out << YAML::EndMap;
+					out << YAML::EndSeq;
 				}
-
-				out << YAML::EndSeq;
 			}
+
 
 			out << YAML::EndMap;
 
+		}
+
+		if (entity->GetEntName() == "trigger_changelevel_circle")
+		{
+			ENTTriggerChangeLevelCircle* trigger = static_cast<ENTTriggerChangeLevelCircle*>(entity);
+			VX_CORE_ASSERT(trigger != nullptr, "trigger is null!");
+			out << YAML::Key << "TriggerChangeLevelCircle";
+			out << YAML::BeginMap;
+			out << YAML::Key << "MapName" << YAML::Value << trigger->filename;
+			out << YAML::Key << "CircleSize" << YAML::Value << trigger->CircleSize;
+			out << YAML::Key << "TargetName" << YAML::Value << trigger->TargetName;
+			out << YAML::EndMap;
 		}
 
 		if (entity->GetEntName() == "prop_dynamic_sprite")
@@ -410,6 +427,10 @@ namespace Vertex {
 			{
 				entity = &m_Scene->CreateEntity<ENTEnvStaticTilemap>(entityID);
 			}
+			if (entityType == "trigger_changelevel_circle")
+			{
+				entity = &m_Scene->CreateEntity<ENTTriggerChangeLevelCircle>(entityID);
+			}
 			if (entityType == "env_script")
 			{
 				entity = &m_Scene->CreateEntity<ENTEnvScript>(entityID);
@@ -456,6 +477,17 @@ namespace Vertex {
 			}
 		}
 
+		if (auto trigger = dynamic_cast<ENTTriggerChangeLevelCircle*>(entity))
+		{
+			auto triggerChangeLevelCircleNode = node["TriggerChangeLevelCircle"];
+			if (triggerChangeLevelCircleNode)
+			{
+				trigger->filename = triggerChangeLevelCircleNode["MapName"].as<std::string>();
+				trigger->CircleSize = triggerChangeLevelCircleNode["CircleSize"].as<float>();
+				trigger->TargetName = triggerChangeLevelCircleNode["TargetName"].as<std::string>();
+			}
+		}
+
 		if (auto bc2d = dynamic_cast<ENTBaseBoxCollier2D*>(entity))
 		{
 			auto boxCollier2DNode = node["BaseBoxCollier2D"];
@@ -480,7 +512,7 @@ namespace Vertex {
 				sprite->colour = propStaticSpriteNode["Colour"].as<glm::vec4>(); // Assuming colour is a glm::vec4
 			}
 			if (propStaticSpriteNode && propStaticSpriteNode["TexturePath"])
-				sprite->texture = Texture2D::Create(propStaticSpriteNode["TexturePath"].as<std::string>());
+				sprite->texture = TextureManager2D::GetOrMakeTextureFromFilename(propStaticSpriteNode["TexturePath"].as<std::string>());
 			if (propStaticSpriteNode && propStaticSpriteNode["TilingFactor"])
 				sprite->tilingFactor = propStaticSpriteNode["TilingFactor"].as<float>();
 		}
@@ -492,7 +524,7 @@ namespace Vertex {
 			if (propDynamicSpriteNode && propDynamicSpriteNode["Colour"]) {
 				sprite->colour = propDynamicSpriteNode["Colour"].as<glm::vec4>(); // Assuming colour is a glm::vec4
 				if (propDynamicSpriteNode["TexturePath"])
-					sprite->texture = Texture2D::Create(propDynamicSpriteNode["TexturePath"].as<std::string>());
+					sprite->texture = TextureManager2D::GetOrMakeTextureFromFilename(propDynamicSpriteNode["TexturePath"].as<std::string>());
 				if (propDynamicSpriteNode["TilingFactor"])
 					sprite->tilingFactor = propDynamicSpriteNode["TilingFactor"].as<float>();
 			}
@@ -527,7 +559,7 @@ namespace Vertex {
 
 						ScriptFieldInstance& fieldInstance = entityFields[name];
 
-						// TODO: turn this assert into Hazelnut log warning
+						// TODO: turn this assert into Vetex log warning
 						VX_CORE_ASSERT(fields.find(name) != fields.end());
 
 						if (fields.find(name) == fields.end())

@@ -92,9 +92,10 @@ namespace Vertex {
 				pdbPath.replace_extension(".pdb");
 				if (std::filesystem::exists(pdbPath))
 				{
-					ScopedBuffer pdbFileData = FileSystem::ReadFileBinary(assemblyPath);
-					mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData.As<char>(), pdbFileData.Size());
+					ScopedBuffer* pdbFileData = new ScopedBuffer(FileSystem::ReadFileBinary(assemblyPath));
+					mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData->As<char>(), pdbFileData->Size());
 					VX_CORE_INFO("Loaded PDB {}", pdbPath.string().c_str());
+					delete pdbFileData;
 				}
 			}
 
@@ -145,11 +146,11 @@ namespace Vertex {
 			if (fieldType == "UShort")  return ScriptFieldType::UShort;
 			if (fieldType == "UInt")    return ScriptFieldType::UInt;
 			if (fieldType == "ULong")   return ScriptFieldType::ULong;
-			if (fieldType == "Vector2") return ScriptFieldType::Vector2;
-			if (fieldType == "Vector3") return ScriptFieldType::Vector3;
-			if (fieldType == "Colour") return ScriptFieldType::Colour;
-			if (fieldType == "Vector4") return ScriptFieldType::Vector4;
-			if (fieldType == "Entity")  return ScriptFieldType::Entity;
+			if (fieldType == "Vertex.Vector2") return ScriptFieldType::Vector2;
+			if (fieldType == "Vertex.Vector3") return ScriptFieldType::Vector3;
+			if (fieldType == "Vertex.Colour") return ScriptFieldType::Colour;
+			if (fieldType == "Vertex.Vector4") return ScriptFieldType::Vector4;
+			if (fieldType == "Vertex.Entity")  return ScriptFieldType::Entity;
 			VX_CORE_ASSERT(false, "Unknown ScriptFieldType");
 			return ScriptFieldType::None;
 		}
@@ -170,11 +171,11 @@ namespace Vertex {
 			case ScriptFieldType::UShort:  return "UShort";
 			case ScriptFieldType::UInt:    return "UInt";
 			case ScriptFieldType::ULong:   return "ULong";
-			case ScriptFieldType::Vector2: return "Vector2";
-			case ScriptFieldType::Vector3: return "Vector3";
-			case ScriptFieldType::Vector4: return "Vector4";
-			case ScriptFieldType::Colour: return "Colour";
-			case ScriptFieldType::Entity:  return "Entity";
+			case ScriptFieldType::Vector2: return "Vertex.Vector2";
+			case ScriptFieldType::Vector3: return "Vertex.Vector3";
+			case ScriptFieldType::Vector4: return "Vertex.Vector4";
+			case ScriptFieldType::Colour: return "Vertex.Colour";
+			case ScriptFieldType::Entity:  return "Vertex.Entity";
 			}
 
 			return "<Invalid>";
@@ -317,8 +318,7 @@ namespace Vertex {
 		auto assemb = s_Data->AppAssembly;
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 		auto assembi = s_Data->AppAssemblyImage;
-		// Utils::PrintAssemblyTypes(s_Data->AppAssembly);
-
+		Utils::PrintAssemblyTypes(s_Data->AppAssembly);
 		
 	}
 
@@ -346,7 +346,7 @@ namespace Vertex {
 		s_Data->CoreAssemblyFilepath = filepath;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
-		// Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
+		Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 	}
 
 	void ScriptEngine::OnRuntimeStart(Scene* scene)
@@ -381,6 +381,25 @@ namespace Vertex {
 			}
 		}
 		
+	}
+
+	void ScriptEngine::OnRemoveEntity(Entity* entity, std::function<bool(ENTEnvScript*)> func)
+	{
+		if (auto sc = dynamic_cast<ENTEnvScript*>(entity))
+		{
+			if (ScriptEngine::EntityClassExists(sc->classname))
+			{
+				UUID entityID = entity->GetID();
+
+				auto iter = s_Data->EntityInstances.find(entityID);
+
+				if (iter != s_Data->EntityInstances.end()) {
+					s_Data->EntityInstances.erase(iter);
+				}
+
+				VX_CORE_ASSERT(func(sc));
+			}
+		}
 	}
 
 	void ScriptEngine::OnUpdateEntity(Entity* entity, Timestep ts)
@@ -591,7 +610,7 @@ namespace Vertex {
 				// Example: Retrieve exception message
 				MonoString* exceptionMessage = mono_object_to_string(exception, nullptr);
 				char* exceptionText = mono_string_to_utf8(exceptionMessage);
-				VX_ASSERT(false, exceptionText);
+				VX_CORE_CRITICAL(exceptionText);
 				mono_free(exceptionText);
 			}
 #else

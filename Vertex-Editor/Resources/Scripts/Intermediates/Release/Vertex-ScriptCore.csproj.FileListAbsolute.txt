@@ -4,3 +4,9 @@ C:\Users\Jimmy\Desktop\Games_In_C++\11\Vertex\Vertex-Editor\Resources\Scripts\In
 C:\Users\Jimmy\Desktop\Games_In_C++\11\Vertex\Vertex-Editor\Resources\Scripts\Intermediates\Release\Vertex-ScriptCore.pdb
 C:\Users\Jimmy\Desktop\Games_In_C++\11\Vertex\Vertex-Editor\Resources\Scripts\Vertex-ScriptCore.dll
 C:\Users\Jimmy\Desktop\Games_In_C++\11\Vertex\Vertex-Editor\Resources\Scripts\Vertex-ScriptCore.pdb
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Resources\Scripts\Intermediates\Release\Vertex-ScriptCore.csproj.AssemblyReference.cache
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Resources\Scripts\Intermediates\Release\Vertex-ScriptCore.csproj.CoreCompileInputs.cache
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Resources\Scripts\Intermediates\Release\Vertex-ScriptCore.dll
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Resources\Scripts\Intermediates\Release\Vertex-ScriptCore.pdb
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Resources\Scripts\Vertex-ScriptCore.dll
+C:\Users\Jimmy\Desktop\Games_In_C++\15\GameForTheGameOff2024\Vertex-Editor\Resources\Scripts\Vertex-ScriptCore.pdb
