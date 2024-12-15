@@ -39,6 +39,9 @@ namespace Vertex
 	private:
 		ProjectionType m_ProjectionType = ProjectionType::Orthographic;
 
+		uint32_t m_ViewportWidth = 0;
+		uint32_t m_ViewportHeight = 0;
+
 		float m_PerspectiveFOV = glm::radians(45.0f);
 		float m_PerspectiveNear = 0.01f, m_PerspectiveFar = 1000.0f;
 

@@ -3,7 +3,7 @@
 
 namespace Vertex
 {
-	class LoadMapMessage : Message
+	class LoadMapMessage : public Message
 	{
 	public:
 

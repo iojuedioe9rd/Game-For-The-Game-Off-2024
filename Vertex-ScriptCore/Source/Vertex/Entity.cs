@@ -76,7 +76,31 @@ namespace Vertex
             return InternalCalls.Entity_RemoveEntity(ent.UUID);
         }
 
-        public Vector3 Size = Vector3.One;
-        public Vector3 Rotation { get; set; }
+        public Vector3 Size {
+            get
+            {
+
+                InternalCalls.Entity_GetSize(UUID, out Vector3 result);
+                return result;
+            }
+            set
+            {
+                InternalCalls.Entity_SetSize(UUID, ref value);
+            }
+        }
+
+        public Vector3 Rotation
+        {
+            get
+            {
+
+                InternalCalls.Entity_GetRotation(UUID, out Vector3 result);
+                return result;
+            }
+            set
+            {
+                InternalCalls.Entity_SetRotation(UUID, ref value);
+            }
+        }
     }
 }

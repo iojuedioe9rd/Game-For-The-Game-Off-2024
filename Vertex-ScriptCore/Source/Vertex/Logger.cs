@@ -19,7 +19,7 @@ namespace Vertex
 
         public static AppLogger appLogger = new AppLogger();
         public static CoreLogger coreLogger = new CoreLogger();
-        public static BaseLogger logger = coreLogger;
+        public static BaseLogger logger = appLogger;
 
         public static void Trace(params object[] args)
         {

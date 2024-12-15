@@ -1,6 +1,6 @@
 Scene: Untitled
 Entities:
-  - Entity: cpy-iq-sn-1s-a7rpvn-d2vga4-oz-dl-tr-36p4-exv
+  - Entity: 2z5m-y9-h7-b0-0b88ay-lli04z7-6z-xq-xz-bz7gtr-2tk
     Tag: Floor
     EntityType: prop_static_sprite
     Transform:
@@ -18,10 +18,10 @@ Entities:
       Restitution: 0
       RestitutionThreshold: 0.5
     PropStaticSprite:
-      Colour: [0.508936465, 0.544401526, 0.145033613, 1]
-      TexturePath: assets\textures\build_1.png
+      Colour: [0.508899987, 0.544399977, 0.144999996, 1]
+      TexturePath: assets/textures/build_1.png
       TilingFactor: 1
-  - Entity: pbph-2g-2n-lh-qz9loy-71v4zi-rs-6o-i8-2xybzx-rz2
+  - Entity: a3n1-a4-c6-v4-o6ibpf-f1t24vt-sf-kz-bs-shkkha-bch
     Tag: Camera
     EntityType: point_camera_2d
     Transform:
@@ -38,7 +38,7 @@ Entities:
       OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
-  - Entity: 9t08-ig-1k-ra-5taixr-9ynpl0z-5v-v4-r-9rfx4y-326
+  - Entity: hhh4-ze-ok-6i-cbr2ml-842e8mb-lh-im-sx-1qsa2f-5il
     Tag: Player
     EntityType: env_script
     Transform:
@@ -48,10 +48,37 @@ Entities:
     EnvScript:
       Classname: Sandbox.Player
       ScriptFields:
+        - Name: GunDistance
+          Type: Float
+          Data: 0
+        - Name: Guns
+          Type: None
+          Data: "null"
+        - Name: JumpTime
+          Type: Float
+          Data: 0
+        - Name: LOL
+          Type: Int
+          Data: 0
         - Name: Speed
           Type: Float
-          Data: 10
-  - Entity: it3r-sm-ck-e6-7025li-6q8714-gr-9h-fs-ettdd-avp
+          Data: 50
+        - Name: Time
+          Type: Float
+          Data: 0
+        - Name: currentGun
+          Type: None
+          Data: "null"
+        - Name: currentGunIndex
+          Type: Int
+          Data: 0
+        - Name: healthSystem
+          Type: None
+          Data: "null"
+        - Name: offset
+          Type: Float
+          Data: 0
+  - Entity: 55k1-kb-ch-g2-m7tm27-stk4ctp-3n-eg-ve-lscxcf-mq0
     Tag: Floor 2
     EntityType: prop_static_sprite
     Transform:
@@ -69,9 +96,9 @@ Entities:
       Restitution: 0
       RestitutionThreshold: 0.5
     PropStaticSprite:
-      Colour: [0.55914551, 0.590733588, 0.109479584, 1]
+      Colour: [0.559099972, 0.590699971, 0.109499998, 1]
       TilingFactor: 1
-  - Entity: f21x-zo-m6-2k-mkifdp-0hbkvpm-oh-yq-12-g3755b-vng
+  - Entity: 59v3-ni-cg-q8-qnbyq0-cn6tdxr-be-zh-gc-dcvlps-5gv
     Tag: name
     EntityType: prop_static_sprite
     Transform:
@@ -89,10 +116,10 @@ Entities:
       Restitution: 0
       RestitutionThreshold: 0.5
     PropStaticSprite:
-      Colour: [0.699127734, 0.776061773, 0.20675005, 1]
-      TexturePath: assets\textures\bg1_0.png
+      Colour: [0.699100018, 0.77609998, 0.206799999, 1]
+      TexturePath: assets/textures/bg1_0.png
       TilingFactor: 1
-  - Entity: cxm-qx-rg-fi-bm8eae-c5nle4h-pl-67-io-dhn52n-te6
+  - Entity: ntyx-7g-2t-yx-4skkis-xz7stm3-nt-tk-1e-sm1sfc-m9d
     Tag: e
     EntityType: env_script
     Transform:
@@ -102,10 +129,31 @@ Entities:
     EnvScript:
       Classname: Sandbox.Parallax
       ScriptFields:
+        - Name: Time
+          Type: Float
+          Data: 0
+        - Name: length
+          Type: Float
+          Data: 0
+        - Name: parallaxEffectPos1
+          Type: Vertex.Vector3
+          Data: [0, 0, 0]
+        - Name: parallaxEffectPos2
+          Type: Vertex.Vector3
+          Data: [0, 0, 0]
+        - Name: parallaxEffectSpeed1
+          Type: Float
+          Data: 0
+        - Name: parallaxEffectSpeed2
+          Type: Float
+          Data: 0
+        - Name: player
+          Type: None
+          Data: "null"
         - Name: startPos
           Type: Float
           Data: -555
-  - Entity: dz2s-xi-kh-dx-1qxd1o-zoylct4-zh-4n-hk-d84gzd-v80
+  - Entity: if3r-t2-hq-30-tthh41-ynm8t4i-rt-89-h6-pbdi4-gki
     Tag: Enemy Spawner
     EntityType: env_script
     Transform:
@@ -115,6 +163,22 @@ Entities:
     EnvScript:
       Classname: Sandbox.EnemySpawner
       ScriptFields:
+        - Name: BoxSize
+          Type: Vertex.Vector2
+          Data: [0, 0]
+        - Name: enemies
+          Type: None
+          Data: "null"
+        - Name: gameTimer
+          Type: Float
+          Data: 0
+        - Name: spawnTimer
+          Type: Float
+          Data: 0
         - Name: speed
           Type: Float
           Data: 3
+---
+Checksum
+---
+5575867983921123711

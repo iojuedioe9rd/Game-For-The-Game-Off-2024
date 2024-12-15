@@ -28,6 +28,7 @@ namespace Vertex
             Vector2 pos = new Vector2(0,0);
             if(isWorld)
             {
+                
                 InternalCalls.Input_GetMousePosWorld(ref pos);
             }
             else
@@ -36,6 +37,16 @@ namespace Vertex
             }
             
             return pos;
+        }
+
+        public static Vector2 WindowSize
+        {
+            get
+            {
+                Vector2 windowSize = new Vector2(0,0);
+                InternalCalls.Input_GetWindowSize(ref windowSize);
+                return windowSize;
+            }
         }
     }
 }

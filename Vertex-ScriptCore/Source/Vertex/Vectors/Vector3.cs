@@ -110,6 +110,22 @@ namespace Vertex
             float dotProduct = Dot(vector, normalizedNormal);
             return vector - 2 * dotProduct * normalizedNormal;
         }
+
+        public static Vector3 MoveTowards(Vector3 current, Vector3 target, float maxDistanceDelta)
+        {
+            // Calculate direction from current to target
+            Vector3 direction = target - current;
+
+            // If the current position is already at or beyond the target position
+            if (direction.Magnitude <= maxDistanceDelta)
+            {
+                return target;
+            }
+
+            // Normalize the direction and move closer to the target by maxDistanceDelta
+            return current + direction.Normalized * maxDistanceDelta;
+        }
+
         public static Vector3 Project(Vector3 vector, Vector3 onNormal) => onNormal * (Dot(vector, onNormal) / onNormal.SqrMagnitude);
 
         // Override methods

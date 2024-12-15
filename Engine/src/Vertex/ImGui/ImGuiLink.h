@@ -147,7 +147,7 @@ namespace Vertex
         static void EndCombo();
         static bool Selectable(char* name, bool* selected);
         static bool DragFloat(std::string label, float value_ptr[1], float speed = 0.0f, float min = 0.0f, float max = 0.0f);
-        static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+        static bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
         static bool BeginPopupContextWindow();
         static void EndPopup();
         static bool Button(std::string label, glm::vec2 size = glm::vec2(0,0));
@@ -168,7 +168,8 @@ namespace Vertex
         static bool BeginDragDropTarget();
         static void EndDragDropTarget();
         static void EndDragDropSource();
-
+        static bool DrawVec2Control(const std::string& label, glm::vec2& values, float resetValue = 0.0f, float columnWidth = 200.0f);
+        static bool DrawVec4Control(const std::string& label, glm::vec4& values, float resetValue = 0.0f, float columnWidth = 50.0f);
         static void* GetContext();
 
 

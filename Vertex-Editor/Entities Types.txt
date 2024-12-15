@@ -1,2 +1,4 @@
 prop_static_sprite
 env_script
+	Enemy: Sandbox.Enemy
+	Player: Sandbox.Player

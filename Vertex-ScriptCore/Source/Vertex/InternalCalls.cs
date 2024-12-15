@@ -15,6 +15,9 @@ namespace Vertex
         internal extern static void Input_GetMousePosWorld(ref Vector2 pos);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void Input_GetWindowSize(ref Vector2 windowSize);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static void Input_GetMousePos(ref Vector2 pos);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
@@ -47,6 +50,9 @@ namespace Vertex
         internal extern static void Renderer2D_DrawQuadTex(ref Vector3 pos, ref Vector3 size, string textureFilename, float tilingFactor, ref Colour tintColour);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void Renderer2D_DrawQuadTexRot(ref Vector3 pos, ref Vector3 size, string textureFilename, float Rotation, float tilingFactor, ref Colour tintColour);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static void Texture2D_FromFilename(string filename);
 
         #endregion
@@ -60,10 +66,18 @@ namespace Vertex
         internal extern static void Entity_SetTranslation(string entityID, ref Vector3 translation);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern static void Entity_GetRotation(string entityID, out Vector3 rotation);
+        internal extern static void Entity_GetSize(string entityID, out Vector3 translation);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern static void Entity_SetRotation(string entityID, ref Vector3 rotation);
+        internal extern static void Entity_SetSize(string entityID, ref Vector3 translation);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void Entity_GetRotation(string entityID, out Vector3 translation);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void Entity_SetRotation(string entityID, ref Vector3 translation);
+
+        
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static string Entity_FindEntityByName(string name);

@@ -77,7 +77,7 @@ namespace Vertex
 }
 
 
-inline Vertex::ImGuizmoLink::OPERATION operator|(Vertex::ImGuizmoLink::OPERATION lhs, Vertex::ImGuizmoLink::OPERATION rhs)
+inline ::Vertex::ImGuizmoLink::OPERATION operator|(::Vertex::ImGuizmoLink::OPERATION lhs, ::Vertex::ImGuizmoLink::OPERATION rhs)
 {
-    return static_cast<Vertex::ImGuizmoLink::OPERATION>(static_cast<int>(lhs) | static_cast<int>(rhs));
+    return static_cast<::Vertex::ImGuizmoLink::OPERATION>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }

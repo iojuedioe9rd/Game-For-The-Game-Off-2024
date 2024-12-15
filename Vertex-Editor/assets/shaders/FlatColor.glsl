@@ -22,6 +22,25 @@ in vec2 TexCoord;
 
 uniform sampler2D u_Texture;
 uniform vec2 u_Res;
+uniform float u_Time;
+
+uniform vec4 u_Color1; // Color1
+uniform vec4 u_Color2; // Color2
+uniform vec4 u_Color3; // Color3
+
+uniform vec2 u_CamPos; // Color3
+
+vec3 applyAnimatedScanlines(vec3 texColor, vec2 TexCoord, float lineDensity, float time)
+{
+    // Calculate the scanline intensity with time-based animation
+    float line = sin((TexCoord.y + time * 0.5) * lineDensity) * 0.5 + 0.5;
+
+    // Optional flicker effect
+    float flicker = sin(time * 10.0) * 0.05 + 0.95; // Flickers between 0.95 and 1.0
+
+    return texColor * line * flicker;
+}
+
 
 // Grayscale effect
 vec3 applyGrayscale(vec3 texColor)
@@ -161,17 +180,27 @@ vec2 snapToPixelGrid(vec2 uv, vec2 textureResolution) {
     return floor(uv * textureResolution) * pixelSize;
 }
 
+// Simple hash function to generate pseudo-random values
+float hash(float n) {
+    return fract(sin(n) * 43758.5453123);
+}
+
+// Function to get noise based on position
+float noise(vec2 uv) {
+    return (hash(uv.x * 100.0) + hash(uv.y * 100.0)) * 0.5; // Combine hash functions for more noise
+}
+
 void main()
 {
-    vec2 textureResolution = vec2(256.0 * 1.5, 256.0 * 1.5); // Replace with actual texture resolution
+    vec2 textureResolution = vec2(256.0, 256.0) + (vec2(noise(TexCoord + u_CamPos), noise(TexCoord + u_CamPos)) * 5.005); // Replace with actual texture resolution
 
-    float offset_x = 1.0 / u_Res.x;  // Calculate horizontal offset
-    float offset_y = 1.0 / u_Res.y;  // Calculate vertical offset
+    float offset_x = 1.0 / u_Res.x + (noise(TexCoord) * 0.005);  // Calculate horizontal offset
+    float offset_y = 1.0 / u_Res.y + (noise(TexCoord) * 0.005);  // Calculate vertical offset
 
-    vec2 flippedTexCoord = vec2(TexCoord.x, 1.0 - TexCoord.y);
+    vec2 flippedTexCoord = vec2(TexCoord.x, 1.0 - TexCoord.y) + (vec2(noise(TexCoord + u_CamPos), noise(TexCoord + u_CamPos)) * 0.005);
     vec2 snappedUV = snapToPixelGrid(flippedTexCoord, textureResolution);
 
-    vec3 texColor = applyAnisotropicKuwahara(u_Texture, snappedUV, u_Res, 5.0);
+    vec3 texColor = texture(u_Texture, flippedTexCoord).xyz;
 
     // Apply kernel effect (convolution/edge detection)
     texColor = applyKernelEffect(texColor, snappedUV, u_Res);
@@ -183,19 +212,26 @@ void main()
 
 
     // Apply bloom
-    texColor = applyBloom(texColor);
+    //texColor = applyBloom(texColor);
+    float noiseValue = noise(gl_FragCoord.xy + u_CamPos);
+    float brightness = (texColor.r + texColor.g + texColor.b) / 3.0;
+    brightness += (noiseValue - 0.5) * 0.1;
 
+    texColor *= 1.0 + brightness;
     // Apply color grading (adjustable brightness and contrast)
-    texColor = applyColorGrading(texColor, 0.1, 1.2); // Example brightness and contrast values
+    //texColor = applyColorGrading(texColor, brightness + (noise(TexCoord) / 100), 1.2); // Example brightness and contrast values
+    texColor = applyAnimatedScanlines(texColor, snappedUV, 800.0, u_Time);
 
     
+    
+    vec3 finalColor = texColor;
+    
 
-
-    texColor = pow(texColor, vec3(0.4545));
+    finalColor = pow(finalColor, vec3(0.4545));
 
     
 
 
     // Output the final color with all effects applied
-    color = vec4(texColor, 1.0);
+    color = vec4(finalColor, 1.0);
 }

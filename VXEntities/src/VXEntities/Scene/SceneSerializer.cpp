@@ -253,6 +253,9 @@ namespace Vertex {
 							WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
 							WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
 							WRITE_SCRIPT_FIELD(Colour, glm::vec4);
+							case ScriptFieldType::None:
+								out << "null";
+								break;
 							//WRITE_SCRIPT_FIELD(Entity, UUID);
 						}
 
@@ -342,9 +345,8 @@ namespace Vertex {
 		
 	}
 
-	uint64_t CalculateChecksumFromNode(const YAML::Node& node, uint64_t initialSeed = 0, uint64_t rotateAmount = 13, uint64_t additiveFactor = 7, uint64_t rotateCount = 5) {
-		// Convert the YAML node to a string
-		std::string yamlString = YAML::Dump(node);
+	uint64_t CalculateChecksumFromNode(std::string& yamlString, uint64_t initialSeed = 0, uint64_t rotateAmount = 13, uint64_t additiveFactor = 7, uint64_t rotateCount = 5) {
+		
 
 		// Calculate checksum using the assembly function
 		return CustomChecksumAsm(yamlString.c_str(), yamlString.size(), initialSeed, rotateAmount, additiveFactor, rotateCount);
@@ -371,11 +373,11 @@ namespace Vertex {
 		// Convert emitted YAML to string for checksum calculation
 		std::string yamlString = out.c_str();
 
-		uint64_t checksum = CalculateChecksumFromNode(YAML::Load(yamlString), 0, 13, 7, 5);
+		uint64_t checksum = CalculateChecksumFromNode((yamlString), 0, 13, 7, 5);
 		// Output the checksum to the YAML as a new key-value pair (optional)
 		out << YAML::Key << "Checksum" << YAML::Value << checksum;
 		std::ofstream fout(filepath);
-		fout << yamlString;
+		fout << out.c_str();
 	}
 
 	

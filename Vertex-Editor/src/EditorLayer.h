@@ -11,6 +11,7 @@
 #include <VXEntities/Scene/EditorCamera.h>
 #include "Panels/ContentBrowserPanel.h"
 #include <filesystem>
+#include "Vertex/Renderer/Mesh.h"
 
 
 
@@ -47,6 +48,16 @@ namespace Vertex {
 
 		// UI Panels
 		void UI_Toolbar();
+
+		enum class SceneState
+		{
+			Edit = BIT(0),
+			Play = BIT(1)
+		};
+
+		SceneState m_SceneState = SceneState::Edit;
+
+		static EditorLayer* lol;
 	private:
 
 		
@@ -63,7 +74,7 @@ namespace Vertex {
 		// Temp
 		Ref<VertexArray> m_SquareVA;
 
-		Ref<VertexArray> m_3DVA;
+		Mesh* m_3DMesh;
 		Ref<Shader> m_3DShader;
 
 		Ref<Shader> m_FlatColorShader;
@@ -101,13 +112,7 @@ namespace Vertex {
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
 
-		enum class SceneState
-		{
-			Edit = BIT(0),
-			Play = BIT(1)
-		};
-
-		SceneState m_SceneState = SceneState::Edit;
+		
 	};
 
 }

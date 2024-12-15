@@ -43,5 +43,10 @@ namespace Vertex
             }
 
         }
+
+        public static void DrawQuad(Vector3 pos, Vector3 size, string filename, float Rotation, float tilingFactor, Colour colour)
+        {
+            InternalCalls.Renderer2D_DrawQuadTexRot(ref pos, ref size, filename, Rotation, tilingFactor, ref colour);
+        }
     }
 }

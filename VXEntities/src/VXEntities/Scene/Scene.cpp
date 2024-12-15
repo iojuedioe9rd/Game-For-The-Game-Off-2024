@@ -175,7 +175,7 @@ namespace Vertex {
 
 
 
-	void Scene::OnRuntimeStart()
+	void Scene::OnRuntimeStart(bool isEditor, glm::vec2 windowSize, glm::vec2 screenSettings[3])
 	{
 		m_IsRunning = true;
 
@@ -184,7 +184,7 @@ namespace Vertex {
 		MonoClass* BC2DClass = nullptr;
 		if (VXEntities_GET_FLAGS() & VXEntities_INIT_USE_MONO)
 		{
-			ScriptEngine::OnRuntimeStart(this);
+			ScriptEngine::OnRuntimeStart(this, isEditor, windowSize, screenSettings);
 			RB2DClass = ScriptEngine::GetMonoClassFromName(ScriptEngine::GetCoreAssemblyImage(), "Vertex", "ENTBaseRigidbody2D");
 			BC2DClass = ScriptEngine::GetMonoClassFromName(ScriptEngine::GetCoreAssemblyImage(), "Vertex", "ENTBaseBoxCollier2D");
 			for (Entity* ent : m_Entitys)
@@ -470,6 +470,37 @@ namespace Vertex {
 		
 	}
 
+	template<typename... ENT>
+	static void CopyEntity(Entity* ent, Scene* scene, bool haveSameUUID)
+	{
+		// Capture 'scene' and 'haveSameUUID' by reference in the lambda
+		([&]()
+			{
+				// Try to dynamically cast 'ent' to the type 'ENT'
+				if (auto derivedEnt = dynamic_cast<ENT*>(ent))
+				{
+					// If the cast is successful, create the new entity
+					ENT* newEntity = &scene->CreateEntity<ENT>(*derivedEnt);
+					if (auto newEnt = dynamic_cast<Entity*>(newEntity))
+					{
+						newEnt->onAdded(scene);
+						if (haveSameUUID)
+						{
+							newEnt->SetID(ent->GetID());
+						}
+					}
+				}
+			}(), ...);
+	}
+
+	template<typename... ENT>
+	static void CopyEntity(Entity* ent, Scene* scene, bool haveSameUUID, EntityGroup<ENT...>)
+	{
+		VX_CORE_INFO("Registering Entities");
+		CopyEntity<ENT...>(ent, scene, haveSameUUID);
+		VX_CORE_INFO("~Registering Entities");
+	}
+
 	Scene* Scene::Copy(Scene* other, std::string& name)
 	{
 		Scene* newScene = VXEntities_MakeOrGetScene(name);
@@ -479,13 +510,14 @@ namespace Vertex {
 
 		for (Entity* ent: *other)
 		{
-			CopyEntity<ENTPropStaticSprite>(dynamic_cast<ENTPropStaticSprite*>(ent), newScene, true);
-			CopyEntity<ENTPropDynamicSprite>(dynamic_cast<ENTPropDynamicSprite*>(ent), newScene, true);
-			CopyEntity<ENTProp2DCircle>(dynamic_cast<ENTProp2DCircle*>(ent), newScene, true);
-			CopyEntity<ENTPointCamera2D>(dynamic_cast<ENTPointCamera2D*>(ent), newScene, true);
-			CopyEntity<ENTEnvStaticTilemap>(dynamic_cast<ENTEnvStaticTilemap*>(ent), newScene, true);
-			CopyEntity<ENTTriggerChangeLevelCircle>(dynamic_cast<ENTTriggerChangeLevelCircle*>(ent), newScene, true);
-			CopyEntity<ENTEnvScript>(dynamic_cast<ENTEnvScript*>(ent), newScene, true);
+			CopyEntity(ent, newScene, true, AllEntities{});
+			//CopyEntity<ENTPropStaticSprite>(dynamic_cast<ENTPropStaticSprite*>(ent), newScene, true);
+			//CopyEntity<ENTPropDynamicSprite>(dynamic_cast<ENTPropDynamicSprite*>(ent), newScene, true);
+			//CopyEntity<ENTProp2DCircle>(dynamic_cast<ENTProp2DCircle*>(ent), newScene, true);
+			//CopyEntity<ENTPointCamera2D>(dynamic_cast<ENTPointCamera2D*>(ent), newScene, true);
+			//CopyEntity<ENTEnvStaticTilemap>(dynamic_cast<ENTEnvStaticTilemap*>(ent), newScene, true);
+			//CopyEntity<ENTTriggerChangeLevelCircle>(dynamic_cast<ENTTriggerChangeLevelCircle*>(ent), newScene, true);
+			//CopyEntity<ENTEnvScript>(dynamic_cast<ENTEnvScript*>(ent), newScene, true);
 		}
 
 		return newScene;

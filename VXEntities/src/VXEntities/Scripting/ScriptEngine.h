@@ -157,7 +157,7 @@ namespace Vertex {
 
 		static void ReloadAssembly();
 
-		static void OnRuntimeStart(Scene* scene);
+		static void OnRuntimeStart(Scene* scene, bool isEditor, glm::vec2 windowSize, glm::vec2 screenSettings[3]);
 		static void OnRuntimeStop();
 
 		static bool EntityClassExists(const std::string& fullClassName);

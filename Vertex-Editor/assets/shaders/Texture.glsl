@@ -161,7 +161,8 @@ void main()
     vec3 mixedColor = mix(u_Color1.rgb * factorA, mix(u_Color2.rgb * factorB, u_Color3.rgb * factorC, factorC / (factorB + factorC)), factorB / (factorA + factorB + factorC));
 
     // Output color based on brightness thresholds
-    vec4 finalColor;
+    //vec4 finalColor;
+    vec4 finalColor = ditheredColor;
     if (brightness < ditheredColor.r) {
         finalColor = u_Color1; // Use COLOR1
     } else if (brightness < ditheredColor.g) {

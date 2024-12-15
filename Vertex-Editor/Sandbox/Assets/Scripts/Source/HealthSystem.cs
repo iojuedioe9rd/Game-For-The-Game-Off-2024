@@ -52,12 +52,15 @@ namespace Sandbox
         }
 
 
-
-
-        public bool Equals(HealthSystem other)
+        public override bool Equals(object obj)
         {
+
+            if (obj == null || (obj as HealthSystem) == null) return false;
+            HealthSystem other = obj as HealthSystem;
             return health == other.health && maxHealth == other.maxHealth;
         }
+
+        
 
         public override int GetHashCode()
         {
@@ -67,6 +70,11 @@ namespace Sandbox
             hashCode = hashCode * -1521134295 + Health.GetHashCode();
             hashCode = hashCode * -1521134295 + MaxHealth.GetHashCode();
             return hashCode;
+        }
+
+        public bool Equals(HealthSystem other)
+        {
+            return this == other;
         }
 
         public static bool operator ==(HealthSystem left, HealthSystem right) => EqualityComparer<HealthSystem>.Default.Equals(left, right);

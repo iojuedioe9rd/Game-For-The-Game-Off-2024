@@ -24,8 +24,12 @@ namespace Vertex
 			return;
 		}
 
-		if(!m_Scene->IsEditor())
+		if (!m_Scene->IsEditor())
 			ScriptEngine::OnDrawEntity(this);
+		else
+			Renderer2D::DrawQuad(pos, size, glm::vec4(1, 1, 1, 1));
+
+		
 	}
 
 	void ENTEnvScript::PhysUpdate(Timestep& ts)

@@ -9,61 +9,72 @@
 
 #pragma once(lib, Winmm.lib)
 
-bool isInit = 0;
-
-
-ma_engine engine;
 
 namespace Vertex {
 
 
 
-	WindowsAudio::WindowsAudio(const char* filepath, bool loop)
-		: m_filepath(filepath), m_loop(loop)
-	{
-		
-		if (!isInit)
-		{
-			ma_result result = ma_engine_init(NULL, &engine);
-			if (result != MA_SUCCESS) {
-				VX_CORE_ASSERT(0, "AUDIO ENGINE ERORR!");
-			}
+    static ma_engine globalEngine;
+    static int engineRefCount = 0;
 
-			
+    void InitializeAudioEngine() {
+        if (engineRefCount == 0) {
+            ma_result result = ma_engine_init(NULL, &globalEngine);
+            if (result != MA_SUCCESS) {
+                VX_CORE_ASSERT(false, "Audio Engine Initialization Failed!");
+            }
+        }
+        engineRefCount++;
+    }
 
-			isInit = 1;
-		}
+    void ShutdownAudioEngine() {
+        if (engineRefCount > 0) {
+            engineRefCount--;
+            if (engineRefCount == 0) {
+                ma_engine_uninit(&globalEngine);
+            }
+        }
+    }
 
-		{
-			ma_result result;
+    WindowsAudio::WindowsAudio(const char* filepath, bool loop)
+        : m_filepath(filepath), m_loop(loop)
+    {
+        InitializeAudioEngine();
 
-			result = ma_sound_init_from_file(&engine, m_filepath, 0, NULL, NULL, &m_sound);
+        ma_result result = ma_sound_init_from_file(
+            &globalEngine,
+            m_filepath,
+            0,
+            NULL,
+            NULL,
+            &m_sound
+        );
 
-			if (result != MA_SUCCESS) {
-				VX_CORE_ASSERT(0, "AUDIO ERORR!");
-			}
-			ma_sound_set_looping(&m_sound, loop);
-		}
+        if (result != MA_SUCCESS) {
+            std::string error = "Failed to initialize sound: " + std::string(filepath);
+            VX_CORE_ASSERT(false, error.c_str());
+        }
 
-	}
+        ma_sound_set_looping(&m_sound, loop);
+    }
 
-	WindowsAudio::~WindowsAudio()
-	{
-		ma_sound_uninit(&m_sound);
-	}
+    WindowsAudio::~WindowsAudio()
+    {
+        ma_sound_uninit(&m_sound);
+        ShutdownAudioEngine();
+    }
 
-	void WindowsAudio::Play()
-	{
-		
-		VX_CORE_INFO("Playing Audio: {0}", m_filepath);
+    void WindowsAudio::Play()
+    {
+        VX_CORE_INFO("Playing Audio: {0}", m_filepath);
+        ma_sound_start(&m_sound);
+    }
 
-		
+    void WindowsAudio::Stop()
+    {
+        VX_CORE_INFO("Stopping Audio: {0}", m_filepath);
+        ma_sound_stop(&m_sound);
+    }
 
-		ma_sound_start(&m_sound);
-	}
-
-	void WindowsAudio::Stop()
-	{
-	}
 
 }

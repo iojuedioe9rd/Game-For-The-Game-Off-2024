@@ -8,6 +8,7 @@
 #include "Vertex/Utils/Utils.h"
 #include "Vertex/ImGui/ImGuizmoLink.h"
 #include "Vertex/Math/Math.h"
+
 #include <VXEntities/Scene/EditorCamera.h>
 #include "resource.h"
 #include <imgui.h>
@@ -18,12 +19,17 @@
 #include "VXEntities/Messages/LoadMap.h"
 #include "Vertex/Renderer/VertexArray.h"
 #include "Vertex/Renderer/Buffer.h"
+#include "Vertex/Renderer/Mesh.h"
+#include "Vertex/Renderer/TextureManager.h"
+
 
 //Discord SDK Stuff.
 #include "DiscordRPC/discord_rpc.h"
 #include "DiscordRPC/discord_register.h"
 
+
 static bool gInit, gRPC = true;
+
 
 std::string wstringToString(const std::wstring& wstr) {
 	std::string str(wstr.begin(), wstr.end());
@@ -92,19 +98,19 @@ namespace Vertex {
 		2, 3, 0   // Second triangle
 	};
 
-	std::shared_ptr<Vertex::VertexArray> Quad;
+	std::shared_ptr<VertexArray> Quad;
 
-	std::shared_ptr<Vertex::VertexArray> SetupFullScreenQuad()
+	std::shared_ptr<VertexArray> SetupFullScreenQuad()
 	{
-		auto quadVAO = std::shared_ptr<Vertex::VertexArray>(Vertex::VertexArray::Create());
+		auto quadVAO = std::shared_ptr<VertexArray>(VertexArray::Create());
 
 		// Create Vertex Buffer
-		auto quadVBO = std::shared_ptr<Vertex::VertexBuffer>(Vertex::VertexBuffer::Create(quadVertices, sizeof(quadVertices)));
+		auto quadVBO = std::shared_ptr<VertexBuffer>(VertexBuffer::Create(quadVertices, sizeof(quadVertices)));
 
 		// Define the buffer layout
-		Vertex::BufferLayout layout = {
-			{ Vertex::ShaderDataType::Float2, "a_Position" },
-			{ Vertex::ShaderDataType::Float2, "a_TexCoord" }
+		BufferLayout layout = {
+			{ ShaderDataType::Float2, "a_Position" },
+			{ ShaderDataType::Float2, "a_TexCoord" }
 		};
 		quadVBO->SetLayout(layout);
 
@@ -112,7 +118,7 @@ namespace Vertex {
 		quadVAO->AddVertexBuffer(quadVBO);
 
 		// Create Index Buffer
-		auto quadIBO = std::shared_ptr<Vertex::IndexBuffer>(Vertex::IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32_t)));
+		auto quadIBO = std::shared_ptr<IndexBuffer>(IndexBuffer::Create(quadIndices, sizeof(quadIndices) / sizeof(uint32_t)));
 
 		// Set Index Buffer for Vertex Array
 		quadVAO->SetIndexBuffer(quadIBO);
@@ -121,6 +127,8 @@ namespace Vertex {
 	}
 
 	extern const std::filesystem::path g_AssetPath;
+
+	EditorLayer* EditorLayer::lol;
 
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer"), m_CameraController(1280.0f / 720.0f), m_SquareColor({ 0.2f, 0.3f, 0.8f, 1.0f })
@@ -208,44 +216,42 @@ namespace Vertex {
 
 		// Load models
 
-		float vertices[] =
-		{
-			//     COORDINATES     /        COLORS          /    TexCoord   /        NORMALS       //
-			-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,      0.0f, -1.0f, 0.0f, // Bottom side
-			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 0.0f, 5.0f,      0.0f, -1.0f, 0.0f, // Bottom side
-			0.5f, 0.0f, -0.5f,      0.83f, 0.70f, 0.44f,	 5.0f, 5.0f,      0.0f, -1.0f, 0.0f, // Bottom side
-			0.5f, 0.0f,  0.5f,      0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      0.0f, -1.0f, 0.0f, // Bottom side
+		std::vector<Vertex> vertices = {
+			// Bottom side
+			{glm::vec3(-0.5f, 0.0f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.3f), glm::vec2(0.0f, 1.0f)},
+			{glm::vec3(-0.5f, 0.0f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.6f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f, 0.0f, -0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.3f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.5f, 0.0f,  0.5f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.2f), glm::vec2(1.0f, 1.0f)},
 
-			-0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f, 	 0.0f, 0.0f,      -0.8f, 0.5f,  0.0f, // Left Side
-			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	 5.0f, 0.0f,      -0.8f, 0.5f,  0.0f, // Left Side
-			0.0f, 0.8f,  0.0f,      0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,      -0.8f, 0.5f,  0.0f, // Left Side
+			// Left side
+			{glm::vec3(-0.5f, 0.0f,  0.5f), glm::vec3(-0.8f, 0.5f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.25f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(-0.5f, 0.0f, -0.5f), glm::vec3(-0.8f, 0.5f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.5f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.0f, 0.8f,  0.0f), glm::vec3(-0.8f, 0.5f, 0.0f), glm::vec4(0.92f, 0.86f, 0.76f, 0.69f), glm::vec2(0.5f, 1.0f)},
 
-			-0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,     5.0f, 0.0f,       0.0f, 0.5f, -0.8f, // Non-facing side
-			0.5f, 0.0f, -0.5f,      0.83f, 0.70f, 0.44f,	 0.0f, 0.0f,       0.0f, 0.5f, -0.8f, // Non-facing side
-			0.0f, 0.8f,  0.0f,      0.92f, 0.86f, 0.76f,	 2.5f, 5.0f,       0.0f, 0.5f, -0.8f, // Non-facing side
+			// Non-facing side
+			{glm::vec3(-0.5f, 0.0f, -0.5f), glm::vec3(0.0f, 0.5f, -0.8f), glm::vec4(0.83f, 0.70f, 0.44f, 0.96f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f, 0.0f, -0.5f), glm::vec3(0.0f, 0.5f, -0.8f), glm::vec4(0.83f, 0.70f, 0.44f, 0.45f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.0f, 0.8f,  0.0f), glm::vec3(0.0f, 0.5f, -0.8f), glm::vec4(0.92f, 0.86f, 0.76f, 1.0f), glm::vec2(0.5f, 1.0f)},
 
-			0.5f, 0.0f, -0.5f,     0.83f, 0.70f, 0.44f,	     0.0f, 0.0f,       0.8f, 0.5f,  0.0f, // Right side
-			0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	     5.0f, 0.0f,       0.8f, 0.5f,  0.0f, // Right side
-			0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	     2.5f, 5.0f,       0.8f, 0.5f,  0.0f, // Right side
+			// Right side
+			{glm::vec3(0.5f, 0.0f, -0.5f), glm::vec3(0.8f, 0.5f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.7f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.5f, 0.0f,  0.5f), glm::vec3(0.8f, 0.5f, 0.0f), glm::vec4(0.83f, 0.70f, 0.44f, 0.43f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(0.0f, 0.8f,  0.0f), glm::vec3(0.8f, 0.5f, 0.0f), glm::vec4(0.92f, 0.86f, 0.76f, 0.24f), glm::vec2(0.5f, 1.0f)},
 
-			0.5f, 0.0f,  0.5f,     0.83f, 0.70f, 0.44f,	     5.0f, 0.0f,       0.0f, 0.5f,  0.8f, // Facing side
-			-0.5f, 0.0f,  0.5f,    0.83f, 0.70f, 0.44f,      0.0f, 0.0f,       0.0f, 0.5f,  0.8f, // Facing side
-			0.0f, 0.8f,  0.0f,     0.92f, 0.86f, 0.76f,	     2.5f, 5.0f,       0.0f, 0.5f,  0.8f  // Facing side
+			// Facing side
+			{glm::vec3(0.5f, 0.0f,  0.5f), glm::vec3(0.0f, 0.5f, 0.8f), glm::vec4(0.83f, 0.70f, 0.44f, 0.13f), glm::vec2(1.0f, 0.0f)},
+			{glm::vec3(-0.5f, 0.0f,  0.5f), glm::vec3(0.0f, 0.5f, 0.8f), glm::vec4(0.83f, 0.70f, 0.44f, 0.8f), glm::vec2(0.0f, 0.0f)},
+			{glm::vec3(0.0f, 0.8f,  0.0f), glm::vec3(0.0f, 0.5f, 0.8f), glm::vec4(0.92f, 0.86f, 0.76f, 0.35f), glm::vec2(0.5f, 1.0f)}
 		};
 
 
 
+
+		//VX_CORE_ASSERT(false, "Hi");
+
 		
 
-		Ref<VertexBuffer> VBO = Ref<VertexBuffer>(VertexBuffer::Create(vertices, sizeof(vertices)));
-		VBO->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float3, "a_Colour" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Float3, "a_Normal" }
-		});
-
-		unsigned int indices[] =
+		std::vector<unsigned int> indices
 		{
 			0, 1, 2, // Bottom side
 			0, 2, 3, // Bottom side
@@ -254,17 +260,14 @@ namespace Vertex {
 			10, 12, 11, // Right side
 			13, 15, 14 // Facing side
 		};
-
-
-		int indicesSize = sizeof(indices) / sizeof(unsigned int);
-		Ref<IndexBuffer> indexBuffer = Ref<IndexBuffer>(IndexBuffer::Create(indices, indicesSize));
-
-
+		
 		m_3DShader = Shader::Create("assets/shaders/3DModel.glsl");
-		m_3DVA = Ref<VertexArray>(VertexArray::Create());
-		m_3DVA->AddVertexBuffer(VBO);
-		m_3DVA->SetIndexBuffer(indexBuffer);
+		
+		std::vector<MaterialTexture> textures = std::vector<MaterialTexture>();
+		textures.emplace_back(TextureManager2D::GetOrMakeTextureFromFilename("assets/textures/planks.png"), "diffuse");
+		textures.emplace_back(TextureManager2D::GetOrMakeTextureFromFilename("assets/textures/planksSpec.png"), "specular");
 
+		m_3DMesh = new Mesh(vertices, indices, textures);
 
 		OpenScene();
 	}
@@ -272,7 +275,7 @@ namespace Vertex {
 	float t = 0.0f;
 
 	
-	void DrawFullScreenQuad(Ref<Shader> m_FlatColorShader, Framebuffer* m_Framebuffer2)
+	void DrawFullScreenQuad(Ref<Shader> m_FlatColorShader, Framebuffer* m_Framebuffer2, glm::vec4 m_Colours[3], glm::vec2 u_CamPos)
 	{
 		// Step 1: Define the vertex data for a full-screen quad
 		float vertices[] = {
@@ -301,9 +304,21 @@ namespace Vertex {
 		vertexArray->SetIndexBuffer(indexBuffer);
 
 		// Step 4: Upload the texture uniform and bind the shader
+
+		if (m_SceneState == EditorLayer::SceneState::Edit)
+		{
+
+		}
+
 		m_FlatColorShader->UploadUniformInt("u_Texture", 0); // Assuming 'u_Texture' is the uniform name in the shader
 		m_FlatColorShader->UploadUniformFloat2("u_Res", Application::GetWindowSize());
 		m_FlatColorShader->UploadUniformFloat("u_Time", t);
+		m_FlatColorShader->UploadUniformFloat2("u_CamPos", u_CamPos);
+		for (size_t i = 0; i < 3; i++)
+		{
+			m_FlatColorShader->UploadUniformFloat4("u_Color" + std::to_string(i + 1), m_Colours[i]);
+		}
+		
 		m_FlatColorShader->Bind();
 
 		// Bind the framebuffer texture to texture unit 0
@@ -324,6 +339,9 @@ namespace Vertex {
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		UpdateDiscord();
+
+		glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
 
 		if (m_EditorScene == nullptr)
 		{
@@ -403,11 +421,14 @@ namespace Vertex {
 		}
 		Renderer2D::EndScene();
 
+		glm::vec2 camPos = glm::vec2(0, 0);
+
 		if (m_SceneState == SceneState::Play)
 		{
 			Ref<Camera> cam;
 			glm::mat4 p_cam;
-			if (m_ActiveScene->GetACameraInScene(&cam, true, &p_cam))
+			ENTPointCamera2D* pointCam;
+			if (m_ActiveScene->GetACameraInScene(&cam, true, &p_cam, &pointCam))
 			{
 				m_3DShader->Bind();
 
@@ -418,18 +439,21 @@ namespace Vertex {
 				glm::mat4 proj = glm::mat4(1.0f);
 				proj = cam->GetProjection();
 
+				camPos = pointCam->pos;
+
 				m_CheckerboardTexture->Bind();
 				
-
+				
 
 				m_3DShader->UploadUniformInt("u_Tex0", 0); // Assuming 'u_Texture' is the uniform name in the shader
 				m_3DShader->UploadUniformMat4("u_Model", model);
 				m_3DShader->UploadUniformMat4("u_View", proj * glm::inverse(p_cam));
 				m_3DShader->UploadUniformMat4("u_Proj", glm::mat4(1.0f));
-
+				m_3DShader->UploadUniformFloat3("u_LightColor", lightColor);
+				m_3DShader->UploadUniformFloat3("u_LightPos", lightPos);
+				m_3DShader->UploadUniformFloat3("u_CamPos", glm::vec3(0, 0, sinf(Time::GetTicks())));
+				m_3DMesh->Draw(m_3DShader);
 				
-
-				RenderCommand::DrawIndexed(m_3DVA, m_3DVA->GetIndexBuffer()->GetCount());
 				m_3DShader->Unbind();
 			}
 
@@ -445,7 +469,7 @@ namespace Vertex {
 
 		m_Framebuffer->Bind();
 		
-		DrawFullScreenQuad(m_FlatColorShader, m_Framebuffer2);
+		DrawFullScreenQuad(m_FlatColorShader, m_Framebuffer2, m_Colours, camPos);
 		RenderCommand::Init();
 
 		m_Framebuffer->Unbind();
@@ -631,7 +655,7 @@ namespace Vertex {
 			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
 			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
-			glm::mat4 transform = Vertex::Math::ComposeTransform(selectedEntity->pos, selectedEntity->size, selectedEntity->rotation);
+			glm::mat4 transform = ::Vertex::Math::ComposeTransform(selectedEntity->pos, selectedEntity->size, selectedEntity->rotation);
 
 			// Snapping
 			bool snap = Input::IsKeyPressed(Key::LeftControl);
@@ -780,7 +804,10 @@ namespace Vertex {
 		m_SceneState = SceneState::Play;
 
 		m_ActiveScene = Scene::Copy(m_EditorScene, std::string("Runtime"));
-		m_ActiveScene->OnRuntimeStart();
+
+		
+		glm::vec2 screenSettings[3] = { m_ViewportBounds[0], m_ViewportBounds[0], ImGuiLink::GetMousePos() };
+		m_ActiveScene->OnRuntimeStart(true, m_ViewportSize, screenSettings);
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}

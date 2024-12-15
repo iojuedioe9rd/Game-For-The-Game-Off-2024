@@ -6,6 +6,10 @@
 
 #include <glad/glad.h>
 
+#define BPP_FROM_FORMAT(format) ((format) == GL_RGBA ? 4 : (format) == GL_RGB ? 3 : (format) == GL_RG ? 2 : 1)
+
+
+
 namespace Vertex 
 {
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
@@ -46,8 +50,19 @@ namespace Vertex
 			m_InternalFormat = GL_RGB8;
 			m_DataFormat = GL_RGB;
 		}
+		else if (channels == 2)
+		{
+			m_InternalFormat = GL_RG8;
+			m_DataFormat = GL_RG;
+		}
+		else if (channels == 1)
+		{
+			m_InternalFormat = GL_R8;
+			m_DataFormat = GL_RED;
+		}
 
-		VX_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
+		VX_CORE_ASSERT(m_InternalFormat != 0 && m_DataFormat != 0, "Format not supported!");
+
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
@@ -85,6 +100,16 @@ namespace Vertex
 			m_InternalFormat = GL_RGB8;
 			m_DataFormat = GL_RGB;
 		}
+		else if (channels == 2)
+		{
+			m_InternalFormat = GL_RG8;
+			m_DataFormat = GL_RG;
+		}
+		else if (channels == 1)
+		{
+			m_InternalFormat = GL_R8;
+			m_DataFormat = GL_RED;
+		}
 
 		VX_CORE_ASSERT(m_InternalFormat & m_DataFormat, "Format not supported!");
 
@@ -104,7 +129,7 @@ namespace Vertex
 
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)
 	{
-		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
+		uint32_t bpp = BPP_FROM_FORMAT(m_DataFormat);
 		VX_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must be entire texture!");
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}

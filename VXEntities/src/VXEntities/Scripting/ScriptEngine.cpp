@@ -25,23 +25,23 @@ namespace Vertex {
 
 	static std::unordered_map<std::string, ScriptFieldType> s_ScriptFieldTypeMap =
 	{
-		{ "System.Single", ScriptFieldType::Float },
-		{ "System.Double", ScriptFieldType::Double },
+		{ "System.Single",  ScriptFieldType::Float },
+		{ "System.Double",  ScriptFieldType::Double },
 		{ "System.Boolean", ScriptFieldType::Bool },
-		{ "System.Char", ScriptFieldType::Char },
-		{ "System.Int16", ScriptFieldType::Short },
-		{ "System.Int32", ScriptFieldType::Int },
-		{ "System.Int64", ScriptFieldType::Long },
-		{ "System.Byte", ScriptFieldType::Byte },
-		{ "System.UInt16", ScriptFieldType::UShort },
-		{ "System.UInt32", ScriptFieldType::UInt },
-		{ "System.UInt64", ScriptFieldType::ULong },
+		{ "System.Char",    ScriptFieldType::Char },
+		{ "System.Int16",   ScriptFieldType::Short },
+		{ "System.Int32",   ScriptFieldType::Int },
+		{ "System.Int64",   ScriptFieldType::Long },
+		{ "System.Byte",    ScriptFieldType::Byte },
+		{ "System.UInt16",  ScriptFieldType::UShort },
+		{ "System.UInt32",  ScriptFieldType::UInt },
+		{ "System.UInt64",  ScriptFieldType::ULong },
 
-		{ "Vetex.Vector2", ScriptFieldType::Vector2 },
-		{ "Vetex.Vector3", ScriptFieldType::Vector3 },
-		{ "Vetex.Vector4", ScriptFieldType::Vector4 },
-		{ "Vetex.Colour", ScriptFieldType::Vector4 },
-		{ "Vetex.Entity", ScriptFieldType::Entity },
+		{ "Vertex.Vector2", ScriptFieldType::Vector2 },
+		{ "Vertex.Vector3", ScriptFieldType::Vector3 },
+		{ "Vertex.Vector4", ScriptFieldType::Vector4 },
+		{ "Vertex.Colour",  ScriptFieldType::Colour },
+		{ "Vertex.Vector3", ScriptFieldType::Entity },
 	};
 
 	namespace Utils {
@@ -86,6 +86,19 @@ namespace Vertex {
 				return nullptr;
 			}
 
+			
+
+			std::string pathString = assemblyPath.string();
+			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
+			if (status != MONO_IMAGE_OK)
+			{
+				const char* errorMessage = mono_image_strerror(status);
+				std::string msg = std::string("Error loading assembly: ") + std::string(errorMessage);
+				VX_CORE_ASSERT(false, msg.c_str());
+				// Log some error message using the errorMessage data
+				return nullptr;
+			}
+
 			if (loadPDB)
 			{
 				std::filesystem::path pdbPath = assemblyPath;
@@ -99,16 +112,6 @@ namespace Vertex {
 				}
 			}
 
-			std::string pathString = assemblyPath.string();
-			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
-			if (status != MONO_IMAGE_OK)
-			{
-				const char* errorMessage = mono_image_strerror(status);
-				std::string msg = std::string("Error loading assembly: ") + std::string(errorMessage);
-				VX_CORE_ASSERT(false, msg.c_str());
-				// Log some error message using the errorMessage data
-				return nullptr;
-			}
 			mono_image_close(image);
 
 			return assembly;
@@ -178,7 +181,7 @@ namespace Vertex {
 			case ScriptFieldType::Entity:  return "Vertex.Entity";
 			}
 
-			return "<Invalid>";
+			return "None";
 		}
 
 }
@@ -349,9 +352,10 @@ namespace Vertex {
 		Utils::PrintAssemblyTypes(s_Data->CoreAssembly);
 	}
 
-	void ScriptEngine::OnRuntimeStart(Scene* scene)
+	void ScriptEngine::OnRuntimeStart(Scene* scene, bool isEditor, glm::vec2 windowSize, glm::vec2 screenSettings[3])
 	{
 		s_Data->SceneContext = scene;
+		ScriptGlue::IsEditor(isEditor, windowSize, screenSettings);
 	}
 
 	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
@@ -363,22 +367,26 @@ namespace Vertex {
 	{
 		if (auto sc = dynamic_cast<ENTEnvScript*>(entity))
 		{
-			if (ScriptEngine::EntityClassExists(sc->classname))
-			{
-				UUID entityID = entity->GetID();
+			UUID entityID = entity->GetID();
+			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc->classname], entity);
+			s_Data->EntityInstances[entityID] = instance;
 
-				Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc->classname], entity);
-				s_Data->EntityInstances[entityID] = instance;
-				// Copy field values
-				if (s_Data->EntityScriptFields.find(entityID) != s_Data->EntityScriptFields.end())
-				{
-					const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields.at(entityID);
-					for (const auto& [name, fieldInstance] : fieldMap)
-						instance->SetFieldValueInternal(name, fieldInstance.m_Buffer);
-				}
-				VX_CORE_ASSERT(func(sc));
-				instance->InvokeOnCreate();
+			// Check ScriptFieldMap initialization
+			if (s_Data->EntityScriptFields.find(entityID) == s_Data->EntityScriptFields.end())
+			{
+				s_Data->EntityScriptFields[entityID] = ScriptFieldMap(); // Ensure map is initialized
 			}
+
+			// Populate field map from ScriptClass fields
+			const auto& fields = s_Data->EntityClasses[sc->classname]->GetFields();
+			for (const auto& [name, field] : fields)
+			{
+				ScriptFieldInstance& fieldInstance = s_Data->EntityScriptFields[entityID][name];
+				fieldInstance.Field = field; // Initialize each field
+			}
+
+			instance->InvokeOnCreate();
+			VX_CORE_ASSERT(func(sc));
 		}
 		
 	}
@@ -453,6 +461,8 @@ namespace Vertex {
 		return it->second;
 	}
 
+	
+
 	void ScriptEngine::OnRuntimeStop()
 	{
 		s_Data->SceneContext = nullptr;
@@ -477,7 +487,8 @@ namespace Vertex {
 	{
 		VX_CORE_ASSERT(entity);
 		UUID entityID = entity->GetID();
-		return s_Data->EntityScriptFields[entityID];
+		ScriptFieldMap& scriptFields = s_Data->EntityScriptFields[entityID];
+		return scriptFields;
 	}
 
 	Ref<ScriptInstance> ScriptEngine::GetEntityInstance(UUID uuid)
@@ -539,7 +550,7 @@ namespace Vertex {
 			{
 				const char* fieldName = mono_field_get_name(field);
 				uint32_t flags = mono_field_get_flags(field);
-				if (flags & FIELD_ATTRIBUTE_PUBLIC)
+				if (flags)
 				{
 					MonoType* type = mono_field_get_type(field);
 					ScriptFieldType fieldType = Utils::MonoTypeToScriptFieldType(type);

@@ -139,10 +139,7 @@ namespace Vertex {
 			}
 			Update(ts);
 
-			for (Entity* ent : m_children)
-			{
-				ent->UpdateTime(ts);
-			}
+			
 		}
 
 		Scene* GetScene()

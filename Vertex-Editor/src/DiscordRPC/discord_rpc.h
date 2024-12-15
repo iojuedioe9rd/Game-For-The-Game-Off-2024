@@ -45,7 +45,7 @@ void Discord_Initialize(const char* applicationId,
     int autoRegister,
     const char* optionalSteamId) 
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)(const char*, DiscordEventHandlers*, int, const char*)>("Discord_Initialize");
 
@@ -54,7 +54,7 @@ void Discord_Initialize(const char* applicationId,
 
 void Discord_Shutdown()
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)()>("Discord_Shutdown");
 
@@ -63,7 +63,7 @@ void Discord_Shutdown()
 
 void Discord_RunCallbacks()
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)()>("Discord_RunCallbacks");
 
@@ -72,7 +72,7 @@ void Discord_RunCallbacks()
 
 void Discord_UpdateConnection()
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)()>("Discord_UpdateConnection");
 
@@ -81,7 +81,7 @@ void Discord_UpdateConnection()
 
 void Discord_UpdatePresence(const DiscordRichPresence* presence)
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)(const DiscordRichPresence*)>("Discord_UpdatePresence");
 
@@ -90,7 +90,7 @@ void Discord_UpdatePresence(const DiscordRichPresence* presence)
 
 void Discord_ClearPresence()
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)()>("Discord_ClearPresence");
 
@@ -99,7 +99,7 @@ void Discord_ClearPresence()
 
 void Discord_Respond(const char* userid, /* DISCORD_REPLY_ */ int reply)
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)(const char*, int)>("Discord_Respond");
 
@@ -108,7 +108,7 @@ void Discord_Respond(const char* userid, /* DISCORD_REPLY_ */ int reply)
 
 void Discord_UpdateHandlers(DiscordEventHandlers* handlers)
 {
-    Ref<Vertex::DynamicLibraryInstance> instance = Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
+    Ref<::Vertex::DynamicLibraryInstance> instance = ::Vertex::Application::Get().GetDLLInstance("plugins\\discord-rpc.dll");
 
     auto func = instance->getFunction<void(*)(DiscordEventHandlers*)>("Discord_UpdateHandlers");
 

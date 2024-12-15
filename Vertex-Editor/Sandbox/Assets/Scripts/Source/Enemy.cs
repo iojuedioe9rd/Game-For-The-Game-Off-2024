@@ -31,6 +31,14 @@ namespace Sandbox
 
         }
 
+        public static bool Intersects(Vector2 pos1, Vector2 size1, Vector2 pos2, Vector2 size2)
+        {
+            return pos1.X < pos2.X + size2.X &&
+                   pos1.X + size1.X > pos2.X &&
+                   pos1.Y < pos2.Y + size2.Y &&
+                   pos1.Y + size1.Y > pos2.Y;
+        }
+
         protected override void OnUpdate(float ts)
         {
             Time += ts;
@@ -38,13 +46,27 @@ namespace Sandbox
             {
                 RemoveEntity(this);
             }
-
-            if(Vector3.Dis(Pos, player.Pos) <= 5.5f)
+            float Dis = Vector3.Dis(Pos, player.Pos);
+            Logger.Info("Dis: ", Dis);
+            if (Dis <= 55.5f)
             {
                 Vector3 diff = Pos - player.Pos;
 
-                Pos += diff.Normalized * ts * 5.0f;
+                Pos = Vector3.MoveTowards(Pos, player.Pos, 5 * ts);
             }
+
+            foreach (Bullet bullet in FindEntitiesByName<Bullet>("Bullet")) 
+            {
+                if(Intersects(Pos, Size, bullet.Pos, bullet.Size))
+                {
+                    RemoveEntity(this);
+                }
+            }
+        }
+
+        private bool Intersects(Vector3 pos1, Vector3 size1, Vector3 pos2, Vector3 size2)
+        {
+            return Intersects(pos1.XY, size1.XY, pos2.XY, size2.XY);
         }
 
         protected override void OnDraw()

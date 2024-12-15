@@ -6,6 +6,18 @@ namespace Vertex
     {
         public float X, Y;
 
+        public float x
+        {
+            get { return X; }
+            set { X = value; } 
+        }
+
+        public float y
+        {
+            get { return Y; }
+            set { Y = value; }
+        }
+
         // Constructor
         public Vector2(float x, float y)
         {
@@ -36,14 +48,9 @@ namespace Vertex
 
         public static float Distance(Vector2 a, Vector2 b)
         {
-            float x1, x2, y1, y2;
-            x1 = a.X;
-            y1 = a.Y;
-            x2 = b.X;
-            y2 = b.Y;
-
-            float distance = Mathf.Distance(x1, y1, x2, y2);
-            return distance;
+            float dx = b.x - a.x;
+            float dy = b.y - a.y;
+            return Mathf.Sqrt(dx * dx + dy * dy);
         }
 
         // Static properties for common vectors
@@ -65,6 +72,8 @@ namespace Vertex
             if (scalar == 0) throw new DivideByZeroException("Cannot divide by zero");
             return new Vector2(a.X / scalar, a.Y / scalar);
         }
+
+        public static Vector2 operator /(Vector2 a, Vector2 b) => new Vector2(a.X / b.X, a.Y / b.Y);
 
         // Equality operators
         public static bool operator ==(Vector2 a, Vector2 b) => a.X == b.X && a.Y == b.Y;

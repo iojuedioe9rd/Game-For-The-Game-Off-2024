@@ -27,6 +27,11 @@ namespace Vertex
             return 1.0f / (float)Math.Sqrt(x); // Basic reciprocal of sqrt calculation
         }
 
+        public static float Sqrt(float x)
+        {
+            return (float)Math.Sqrt(x);
+        }
+
         // Approximate sine using Taylor series expansion (for small values)
         public static float Sin(float x)
         {

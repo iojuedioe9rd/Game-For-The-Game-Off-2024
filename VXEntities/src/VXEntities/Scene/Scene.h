@@ -46,7 +46,7 @@ namespace Vertex
 
 		std::vector<Entity*> FindEntitiesByName(std::string_view name, std::string_view type = "");
 
-		void OnRuntimeStart();
+		void OnRuntimeStart(bool isEditor = false, glm::vec2 windowSize = glm::vec2(0,0), glm::vec2 screenSettings[3] = nullptr);
 		void OnRuntimeStop();
 
 		bool GetACameraInScene(Ref<Camera>* mainCamera, bool is2D, glm::mat4* cameraTransform = nullptr, ENTPointCamera2D** cam = nullptr, bool usePrimaryCam = true);

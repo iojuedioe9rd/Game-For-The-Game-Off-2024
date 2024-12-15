@@ -25,7 +25,7 @@ namespace Vertex {
 	SceneHierarchyPanel::SceneHierarchyPanel(Scene* scene)
 	{
 		SetContext(scene);
-		ScriptEngine::OnRuntimeStart(scene);
+		//ScriptEngine::OnRuntimeStart(scene);
 	}
 
 	void SceneHierarchyPanel::SetContext(Scene* scene)
@@ -482,6 +482,15 @@ namespace Vertex {
 								scriptInstance->SetFieldValue(name, data);
 							}
 						}
+
+						if (field.Type == ScriptFieldType::Vector2)
+						{
+							glm::vec2 data = scriptInstance->GetFieldValue<glm::vec2>(name);
+							if (ImGuiLink::DrawVec2Control(name, data))
+							{
+								scriptInstance->SetFieldValue(name, data);
+							}
+						}
 					}
 				}
 			}
@@ -507,6 +516,15 @@ namespace Vertex {
 								if (ImGui::DragFloat(name.c_str(), &data))
 									scriptField.SetValue(data);
 							}
+
+							if (field.Type == ScriptFieldType::Vector2)
+							{
+								glm::vec2 data = scriptField.GetValue<glm::vec2>();
+								if (ImGuiLink::DrawVec2Control(name, data))
+								{
+									scriptField.SetValue(data);
+								}
+							}
 						}
 						else
 						{
@@ -515,6 +533,28 @@ namespace Vertex {
 							{
 								float data = 0.0f;
 								if (ImGui::DragFloat(name.c_str(), &data))
+								{
+									ScriptFieldInstance& fieldInstance = entityFields[name];
+									fieldInstance.Field = field;
+									fieldInstance.SetValue(data);
+								}
+							}
+
+							if (field.Type == ScriptFieldType::Vector2)
+							{
+								glm::vec2 data = glm::vec2(0, 0);
+								if (ImGuiLink::DrawVec2Control(name, data))
+								{
+									ScriptFieldInstance& fieldInstance = entityFields[name];
+									fieldInstance.Field = field;
+									fieldInstance.SetValue(data);
+								}
+							}
+
+							if (field.Type == ScriptFieldType::Vector3)
+							{
+								glm::vec3 data = glm::vec3(0, 0, 0);
+								if (ImGuiLink::DrawVec3Control(name, data))
 								{
 									ScriptFieldInstance& fieldInstance = entityFields[name];
 									fieldInstance.Field = field;

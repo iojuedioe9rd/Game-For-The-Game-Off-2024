@@ -22,9 +22,9 @@ namespace Vertex {
 	};
 
 	
-	Application* Vertex::CreateApp(ApplicationCommandLineArgs args)
+	Application* ::Vertex::CreateApp(ApplicationCommandLineArgs args)
 	{
-		return new Vertex::VertexEditor(args);
+		return new ::Vertex::VertexEditor(args);
 	}
 }
 

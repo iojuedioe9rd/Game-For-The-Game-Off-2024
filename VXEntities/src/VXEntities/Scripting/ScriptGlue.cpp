@@ -19,7 +19,6 @@
 #include "../Scene/Entities/Entities.h"
 
 #include "box2d/b2_world.h"
-#include "box2d/b2_body.h"
 #include "box2d/b2_fixture.h"
 #include "box2d/b2_polygon_shape.h"
 #include <mono/metadata/appdomain.h>
@@ -35,6 +34,10 @@ static b2BodyType Rigidbody2DTypeToBox2DBody(Vertex::ENTBaseRigidbody2D::BodyTyp
 	VX_CORE_ASSERT(false, "Unknown body type");
 	return b2_staticBody;
 }
+
+bool is_editor = false;
+glm::vec2 window_size;
+glm::vec2* screen_settings = nullptr;
 
 namespace Vertex
 {
@@ -59,16 +62,73 @@ namespace Vertex
 			{
 				ENTPointCamera2D* cam = (ENTPointCamera2D*)ent;
 				Ref<SceneCamera> camera = cam->camera;
+
+				if (false)
+				{
+					auto mx = screen_settings[2].x;
+					auto my = screen_settings[2].y;
+
+					// Offset by bottom-left corner of the viewport
+					mx -= screen_settings[0].x;
+					my -= screen_settings[0].y;
+
+					// Calculate viewport size
+					glm::vec2 viewportSize = screen_settings[1] - screen_settings[0];
+
+					// Flip the Y-axis to match viewport coordinate system
+					my = viewportSize.y - my;
+
+					mousePos = glm::vec2(mx, my);
+				}
+				
 				*Pos = camera->ScreenToWorldPoint(mousePos);
+				
 			}
 		}
 	}
 
+
+	// internal extern static void Renderer2D_DrawQuadTexRot(ref Vector3 pos, ref Vector3 size, string textureFilename, float Rotation, float tilingFactor, ref Colour tintColour);
+	static void Renderer2D_DrawQuadTexRot(glm::vec3* pos, glm::vec3* size, MonoString* textureFilename, float Rotation, float tilingFactor, glm::vec4* tintColour)
+	{
+		const char* tex_cStr = mono_string_to_utf8(textureFilename);
+
+		Ref<Texture2D> tex = TextureManager2D::GetOrMakeTextureFromFilename(std::string(tex_cStr));
+
+		Renderer2D::DrawRotatedQuad(*pos, *size, Rotation, tex, tilingFactor, *tintColour);
+	}
+
+
 	static void Input_GetMousePos(glm::vec2* Pos)
 	{
-		*Pos = Input::GetMousePositionVec2();
+		glm::vec2 mousePos = Input::GetMousePositionVec2();
+
+		if (is_editor)
+		{
+			auto mx = screen_settings[2].x;
+			auto my = screen_settings[2].y;
+
+			// Offset by bottom-left corner of the viewport
+			mx -= screen_settings[0].x;
+			my -= screen_settings[0].y;
+
+			// Calculate viewport size
+			glm::vec2 viewportSize = screen_settings[1] - screen_settings[0];
+
+			// Flip the Y-axis to match viewport coordinate system
+			my = viewportSize.y - my;
+
+			mousePos = glm::vec2(mx, my);
+		}
+
+		*Pos = mousePos;
 	}
 	
+	static void Input_GetWindowSize(glm::vec2* windowSize)
+	{
+		*windowSize = Application::GetWindowSize();
+	}
+
 	//internal extern static bool Input_IsMouseButtonPressed(MouseCode button);
 	bool Input_IsMouseButtonPressed(MouseCode button)
 	{
@@ -335,6 +395,7 @@ namespace Vertex
 		VX_CORE_ASSERT(scene);
 		Entity* entity = nullptr;
 		char* cStr = mono_string_to_utf8(entityID);
+		VX_CORE_ASSERT(cStr);
 		for (Entity* ent : *scene)
 		{
 			
@@ -348,6 +409,46 @@ namespace Vertex
 		
 		if(entity)
 			*outTranslation = entity->pos;
+	}
+	static void Entity_GetSize(MonoString* entityID, glm::vec3* outSize)
+	{
+		Scene* scene = ScriptEngine::GetSceneContext();
+		VX_CORE_ASSERT(scene);
+		Entity* entity = nullptr;
+		char* cStr = mono_string_to_utf8(entityID);
+		for (Entity* ent : *scene)
+		{
+
+			if (ent->GetID() == std::string(cStr))
+			{
+				entity = ent;
+				break;
+			}
+		}
+		//VX_CORE_ASSERT(entity);
+
+		if (entity)
+			*outSize = entity->size;
+	}
+	static void Entity_GetRotation(MonoString* entityID, glm::vec3* outRotation)
+	{
+		Scene* scene = ScriptEngine::GetSceneContext();
+		VX_CORE_ASSERT(scene);
+		Entity* entity = nullptr;
+		char* cStr = mono_string_to_utf8(entityID);
+		for (Entity* ent : *scene)
+		{
+
+			if (ent->GetID() == std::string(cStr))
+			{
+				entity = ent;
+				break;
+			}
+		}
+		//VX_CORE_ASSERT(entity);
+
+		if (entity)
+			*outRotation = entity->rotation;
 	}
 
 	static MonoString* Object_GenerateUUID()
@@ -368,6 +469,7 @@ namespace Vertex
 
 	static void Rigidbody2D_GetTransform(b2Body** body, glm::vec4* transform2D)
 	{
+		if (body == nullptr || *body == nullptr) return;
 		const auto& position = (*body)->GetPosition();
 		
 		transform2D->x = position.x;
@@ -400,6 +502,44 @@ namespace Vertex
 		//VX_CORE_ASSERT(entity);
 		if (entity)
 			entity->pos = *translation;
+	}
+
+	static void Entity_SetSize(MonoString* entityID, glm::vec3* size)
+	{
+		Scene* scene = ScriptEngine::GetSceneContext();
+		VX_CORE_ASSERT(scene);
+		Entity* entity = nullptr;
+		for (Entity* ent : *scene)
+		{
+			char* cStr = mono_string_to_utf8(entityID);
+			if (ent->GetID() == std::string(cStr))
+			{
+				entity = ent;
+				break;
+			}
+		}
+		//VX_CORE_ASSERT(entity);
+		if (entity)
+			entity->pos = *size;
+	}
+
+	static void Entity_SetRotation(MonoString* entityID, glm::vec3* Rotation)
+	{
+		Scene* scene = ScriptEngine::GetSceneContext();
+		VX_CORE_ASSERT(scene);
+		Entity* entity = nullptr;
+		for (Entity* ent : *scene)
+		{
+			char* cStr = mono_string_to_utf8(entityID);
+			if (ent->GetID() == std::string(cStr))
+			{
+				entity = ent;
+				break;
+			}
+		}
+		//VX_CORE_ASSERT(entity);
+		if (entity)
+			entity->pos = *Rotation;
 	}
 
 	static void NativeLog(MonoString* string, int parameter)
@@ -458,6 +598,7 @@ namespace Vertex
 		VX_ADD_INTERNAL_CALL(Input_GetMousePosWorld);
 		VX_ADD_INTERNAL_CALL(Input_GetMousePos);
 		VX_ADD_INTERNAL_CALL(Input_IsMouseButtonPressed);
+		VX_ADD_INTERNAL_CALL(Input_GetWindowSize);
 
 		VX_ADD_INTERNAL_CALL(NativeLog);
 		VX_ADD_INTERNAL_CALL(NativeLog_Vector);
@@ -468,13 +609,18 @@ namespace Vertex
 		VX_ADD_INTERNAL_CALL(EndLog);
 
 		VX_ADD_INTERNAL_CALL(Renderer2D_DrawQuad);
+		VX_ADD_INTERNAL_CALL(Renderer2D_DrawQuadTexRot);
 		VX_ADD_INTERNAL_CALL(Texture2D_FromFilename);
 		VX_ADD_INTERNAL_CALL(Renderer2D_DrawQuadTex);
 
 		VX_ADD_INTERNAL_CALL(GetScriptInstance);
 
 		VX_ADD_INTERNAL_CALL(Entity_GetTranslation);
+		VX_ADD_INTERNAL_CALL(Entity_GetSize);
+		VX_ADD_INTERNAL_CALL(Entity_GetRotation);
 		VX_ADD_INTERNAL_CALL(Entity_SetTranslation);
+		VX_ADD_INTERNAL_CALL(Entity_SetSize);
+		VX_ADD_INTERNAL_CALL(Entity_SetRotation);
 		VX_ADD_INTERNAL_CALL(Entity_FindEntityByName);
 		VX_ADD_INTERNAL_CALL(Entity_NewEntity);
 		VX_ADD_INTERNAL_CALL(Entity_RemoveEntity);
@@ -489,6 +635,23 @@ namespace Vertex
 		VX_ADD_INTERNAL_CALL(Rigidbody2D_SetTransform);
 
 		VX_ADD_INTERNAL_CALL(Object_GenerateUUID);
+	}
+
+	void ScriptGlue::IsEditor(bool isEditor, glm::vec2 windowSize, glm::vec2 screenSettings[3])
+	{
+		if (screen_settings != nullptr)
+		{
+			free(screen_settings);
+		}
+		
+		screen_settings = (glm::vec2*)malloc(sizeof(glm::vec2) * 3);
+		is_editor = isEditor;
+		window_size = windowSize;
+		for (size_t i = 0; i < 3; i++)
+		{
+			screen_settings[i] = screenSettings[i];
+		}
+		
 	}
 
 }
